@@ -5,24 +5,13 @@ from sqlalchemy import text
 from app.models.user import Base, User
 from app.schemas.user import UserCreate
 import bcrypt
+from app.api.v1 import auth
+
+
 app = FastAPI()
 
+app.include_router(auth.router)
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-@app.post("/register")
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    hashed_pw = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
-    new_user = User(email=user.email, password=hashed_pw.decode('utf-8'))
-    db.add(new_user)
-    db.commit()
-    return {"message": "User created successfully"}
 Base.metadata.create_all(bind=engine)
 
 @app.get("/")
@@ -34,3 +23,6 @@ def test_db():
     with engine.connect() as connection:
         result = connection.execute(text("SELECT 1"))
         return {"database_response": "Connected Successfully"}
+
+
+
