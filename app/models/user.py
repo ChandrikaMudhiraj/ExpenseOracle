@@ -12,4 +12,4 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expenses = relationship("Expense", back_populates="user")
-
+    budgets = relationship("Budget", back_populates="user")
