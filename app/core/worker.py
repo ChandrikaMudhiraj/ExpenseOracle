@@ -1,16 +1,16 @@
 from celery import Celery
-import os
+from app.core.config import get_settings
+
+settings = get_settings()
 
 # Celery Configuration for Enterprise-Scale Background Processing
 # Implements asynchronous scheduled financial intelligence pipeline 
 # using distributed task queues.
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-
 celery_app = Celery(
     "expense_oracle_worker",
-    broker=REDIS_URL,
-    backend=REDIS_URL,
+    broker=settings.REDIS_URL,
+    backend=settings.REDIS_URL,
     include=["app.ml.tasks"]
 )
 

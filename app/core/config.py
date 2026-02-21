@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "ExpenseOracle"
 
     DATABASE_URL: str
+    REDIS_URL: str = "redis://localhost:6379/0"
 
     SECRET_KEY: str
     ALGORITHM: str = "HS256"

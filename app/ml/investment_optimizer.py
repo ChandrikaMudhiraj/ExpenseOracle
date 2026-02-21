@@ -36,6 +36,7 @@ class InvestmentOptimizer:
                 "composition": data["composition"],
                 "expected_return": f"{int(mu*100)}%",
                 "sharpe_ratio": round(float(sharpe_ratio), 2),
+                "risk_band": "Low Risk" if sigma < 0.05 else "Moderate Risk" if sigma < 0.15 else "High Risk",
                 "projection": {
                     "mean": round(float(np.mean(final_values)), 2),
                     "p10_worst_case": round(float(np.percentile(final_values, 10)), 2),

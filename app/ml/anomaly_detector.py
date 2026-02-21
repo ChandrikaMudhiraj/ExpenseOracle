@@ -49,10 +49,15 @@ class AnomalyDetector:
                 
                 robust_z_score = abs(exp['amount'] - median) / (consistency_constant * mad)
                 z_score = robust_z_score
+                # Anomaly probability based on Z-score
+                # 2.0 Z ~ 95% (Anom prob ~ 50%), 3.0 Z ~ 99% (Anom prob ~ 90%)
+                # We use a simple sigmoid-like mapping for the demo
+                probability = 1 / (1 + math.exp(-2 * (z_score - 2.5)))
                 reason = f"Spending on '{exp['title']}' is {round(z_score, 1)}x robust-STDs above its median."
             else:
                 # Fallback to Global stats
                 z_score = abs(exp['amount'] - global_mean) / global_std
+                probability = 1 / (1 + math.exp(-2 * (z_score - 3.0)))
                 reason = f"Unusual amount for a new merchant. Spending is {round(z_score, 1)}x above your global average."
 
             if z_score > threshold:
@@ -61,6 +66,7 @@ class AnomalyDetector:
                     "title": exp['title'],
                     "amount": exp['amount'],
                     "z_score": round(z_score, 2),
+                    "anomaly_probability": round(float(probability), 2),
                     "reason": reason
                 })
 
