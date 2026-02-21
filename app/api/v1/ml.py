@@ -11,7 +11,9 @@ from app.ml.investment_optimizer import InvestmentOptimizer
 from app.ml.advisor_chatbot import FinancialAdvisorChatbot
 from app.ml.health_score import FinancialHealthScore
 from app.ml.metrics_manager import MetricsManager
+from app.ml.analytics import AnalyticsEngine
 from app.models.user import User
+from app.core.cache_manager import CacheManager
 
 router = APIRouter(prefix="/ml", tags=["ML & Autonomous Finance"])
 
@@ -24,6 +26,12 @@ def _get_user_income(db: Session, user_id: int) -> float:
 
 @router.get("/forecast")
 def get_spending_forecast(user_id: int, db: Session = Depends(get_db)):
+    # 1. Try Cache First
+    cache_key = f"forecast:{user_id}"
+    cached_res = CacheManager.get(cache_key)
+    if cached_res:
+        return cached_res
+    
     expenses = list_expenses(db, user_id)
     if not expenses:
         return {"prediction": 0.0, "message": "Insufficient data for forecast."}
@@ -32,11 +40,15 @@ def get_spending_forecast(user_id: int, db: Session = Depends(get_db)):
     forecast_result = spendingForecaster.predict_next_month(prepared_data)
     insights = spendingForecaster.get_category_recommendations(prepared_data)
     
-    return {
+    response = {
         "user_id": user_id,
         "forecast_analysis": forecast_result,
         "strategic_insights": insights
     }
+    
+    # 2. Store in Cache (1 hour TTL)
+    CacheManager.set(cache_key, response, expire=3600)
+    return response
 
 @router.get("/anomalies")
 def get_spending_anomalies(user_id: int, threshold: float = 2.0, db: Session = Depends(get_db)):
@@ -56,7 +68,7 @@ def get_autonomous_actions(user_id: int, db: Session = Depends(get_db)):
     budgets = list_budgets(db, user_id)
     income = _get_user_income(db, user_id)
     
-    total_monthly_budget = sum([b.amount for b in budgets]) if budgets else 0.0
+    total_monthly_budget = sum([b.limit_amount for b in budgets]) if budgets else 0.0
     prepared_data = _prepare_expenses(expenses)
     
     actions = AutonomousEngine.generate_actions(prepared_data, total_monthly_budget, income)
@@ -76,13 +88,23 @@ def simulate_investments(principal: float, years: int = 1):
 
 @router.get("/health-score")
 def get_health_score(user_id: int, db: Session = Depends(get_db)):
+    # 1. Try Cache
+    cache_key = f"health_score:{user_id}"
+    cached_res = CacheManager.get(cache_key)
+    if cached_res:
+        return cached_res
+        
     expenses = list_expenses(db, user_id)
     budgets = list_budgets(db, user_id)
     income = _get_user_income(db, user_id)
-    total_monthly_budget = sum([b.amount for b in budgets]) if budgets else 0.0
+    total_monthly_budget = sum([b.limit_amount for b in budgets]) if budgets else 0.0
     
     prepared_data = _prepare_expenses(expenses)
-    return FinancialHealthScore.calculate(prepared_data, total_monthly_budget, income)
+    result = FinancialHealthScore.calculate(prepared_data, total_monthly_budget, income)
+    
+    # 2. Store in Cache (30 min TTL)
+    CacheManager.set(cache_key, result, expire=1800)
+    return result
 
 @router.get("/model-metrics")
 def get_ml_metrics(user_id: int, db: Session = Depends(get_db)):
@@ -95,7 +117,24 @@ def oracle_chat(user_id: int, query: str = Body(..., embed=True), db: Session = 
     expenses = list_expenses(db, user_id)
     budgets = list_budgets(db, user_id)
     income = _get_user_income(db, user_id)
-    total_monthly_budget = sum([b.amount for b in budgets]) if budgets else 0.0
+    total_monthly_budget = sum([b.limit_amount for b in budgets]) if budgets else 0.0
     
     prepared_data = _prepare_expenses(expenses)
     return FinancialAdvisorChatbot.process_query(query, user_id, prepared_data, total_monthly_budget, income)
+
+@router.get("/analytics")
+def get_visual_analytics(user_id: int, db: Session = Depends(get_db)):
+    expenses = list_expenses(db, user_id)
+    prepared_data = _prepare_expenses(expenses)
+    
+    forecast_vs_actual = AnalyticsEngine.get_forecast_vs_actual(prepared_data)
+    sim_data = InvestmentOptimizer.simulate_monte_carlo(10000, 1) # $10k principal
+    monte_carlo_distribution = AnalyticsEngine.get_monte_carlo_distribution(sim_data)
+    
+    return {
+        "user_id": user_id,
+        "series": {
+            "forecast_vs_actual": forecast_vs_actual,
+            "wealth_probability_distribution": monte_carlo_distribution
+        }
+    }
