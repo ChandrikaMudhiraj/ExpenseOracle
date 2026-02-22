@@ -5,14 +5,18 @@ by `app.main` during startup. This ensures routers (e.g. `/health`) are
 loaded and included in the FastAPI application.
 """
 
-from . import auth, expenses, budgets, ml, assistant, dashboard, health
+import importlib
+from types import ModuleType
 
-__all__ = [
-    "auth",
-    "expenses",
-    "budgets",
-    "ml",
-    "assistant",
-    "dashboard",
-    "health",
-]
+_modules = ["auth", "expenses", "budgets", "ml", "assistant", "dashboard", "health"]
+
+for _m in _modules:
+    try:
+        mod = importlib.import_module(f"{__package__}.{_m}")
+        globals()[_m] = mod
+    except Exception:
+        # don't fail package import if an optional submodule is missing;
+        # routers will be registered when available.
+        globals()[_m] = None
+
+__all__ = _modules
