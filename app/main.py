@@ -8,7 +8,16 @@ from sqlalchemy import text
 from app.models.user import Base, User
 from app.schemas.user import UserCreate
 import bcrypt
-from app.api.v1 import auth, expenses, budgets, ml, health, dashboard, assistant
+import importlib
+
+# Import API v1 modules explicitly so routers are reliably registered
+auth = importlib.import_module("app.api.v1.auth")
+expenses = importlib.import_module("app.api.v1.expenses")
+budgets = importlib.import_module("app.api.v1.budgets")
+ml = importlib.import_module("app.api.v1.ml")
+health = importlib.import_module("app.api.v1.health")
+dashboard = importlib.import_module("app.api.v1.dashboard")
+assistant = importlib.import_module("app.api.v1.assistant")
 
 from app.core.logging_config import configure_logging
 from app.core.config import get_settings
