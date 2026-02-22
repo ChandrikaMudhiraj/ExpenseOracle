@@ -15,9 +15,20 @@ auth = importlib.import_module("app.api.v1.auth")
 expenses = importlib.import_module("app.api.v1.expenses")
 budgets = importlib.import_module("app.api.v1.budgets")
 ml = importlib.import_module("app.api.v1.ml")
-health = importlib.import_module("app.api.v1.health")
-dashboard = importlib.import_module("app.api.v1.dashboard")
-assistant = importlib.import_module("app.api.v1.assistant")
+try:
+	health = importlib.import_module("app.api.v1.health")
+except Exception:
+	health = None
+
+try:
+	dashboard = importlib.import_module("app.api.v1.dashboard")
+except Exception:
+	dashboard = None
+
+try:
+	assistant = importlib.import_module("app.api.v1.assistant")
+except Exception:
+	assistant = None
 
 from app.core.logging_config import configure_logging
 from app.core.config import get_settings
@@ -61,10 +72,12 @@ app.include_router(auth.router)
 app.include_router(expenses.router)
 app.include_router(budgets.router)
 app.include_router(ml.router)
-app.include_router(health.router)
-if settings.ENABLE_DASHBOARD:
+if health is not None and hasattr(health, "router"):
+	app.include_router(health.router)
+if settings.ENABLE_DASHBOARD and dashboard is not None and hasattr(dashboard, "router"):
 	app.include_router(dashboard.router)
-app.include_router(assistant.router)
+if assistant is not None and hasattr(assistant, "router"):
+	app.include_router(assistant.router)
 
 
 # Inline health endpoint as a fallback to ensure a stable /health path
