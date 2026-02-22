@@ -8,7 +8,7 @@ from sqlalchemy import text
 from app.models.user import Base, User
 from app.schemas.user import UserCreate
 import bcrypt
-from app.api.v1 import auth, expenses, budgets, ml, health, dashboard
+from app.api.v1 import auth, expenses, budgets, ml, health, dashboard, assistant
 
 from app.core.logging_config import configure_logging
 from app.core.config import get_settings
@@ -55,6 +55,7 @@ app.include_router(ml.router)
 app.include_router(health.router)
 if settings.ENABLE_DASHBOARD:
 	app.include_router(dashboard.router)
+app.include_router(assistant.router)
 
 
 
