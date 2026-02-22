@@ -67,4 +67,15 @@ if settings.ENABLE_DASHBOARD:
 app.include_router(assistant.router)
 
 
+# Inline health endpoint as a fallback to ensure a stable /health path
+@app.get("/health")
+def _health():
+	try:
+		with engine.connect() as conn:
+			conn.execute(text("SELECT 1"))
+		return {"status": "ok"}
+	except Exception as e:
+		return JSONResponse(status_code=503, content={"status": "fail", "detail": str(e)})
+
+
 
