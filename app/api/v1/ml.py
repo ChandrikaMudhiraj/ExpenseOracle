@@ -14,6 +14,9 @@ from app.ml.metrics_manager import MetricsManager
 from app.ml.analytics import AnalyticsEngine
 from app.models.user import User
 from app.core.cache_manager import CacheManager
+from app.core.config import get_settings
+
+settings = get_settings()
 
 router = APIRouter(prefix="/ml", tags=["ML & Autonomous Finance"])
 
@@ -64,6 +67,8 @@ def get_spending_anomalies(user_id: int, threshold: float = 2.0, db: Session = D
 
 @router.get("/autonomous-actions")
 def get_autonomous_actions(user_id: int, db: Session = Depends(get_db)):
+    if not settings.AUTONOMOUS_ENABLED:
+        raise HTTPException(status_code=503, detail="Autonomous features are disabled")
     expenses = list_expenses(db, user_id)
     budgets = list_budgets(db, user_id)
     income = _get_user_income(db, user_id)
@@ -81,6 +86,8 @@ def get_autonomous_actions(user_id: int, db: Session = Depends(get_db)):
 
 @router.get("/investment-simulator")
 def simulate_investments(principal: float, years: int = 1):
+    if not settings.ENABLE_HEAVY_ML:
+        raise HTTPException(status_code=503, detail="Investment simulation is disabled by feature flag")
     return {
         "principal": principal,
         "simulations": InvestmentOptimizer.simulate_monte_carlo(principal, years)
@@ -114,6 +121,8 @@ def get_ml_metrics(user_id: int, db: Session = Depends(get_db)):
 
 @router.post("/chat")
 def oracle_chat(user_id: int, query: str = Body(..., embed=True), db: Session = Depends(get_db)):
+    if not settings.ENABLE_HEAVY_ML:
+        raise HTTPException(status_code=503, detail="Chat advisor is disabled by feature flag")
     expenses = list_expenses(db, user_id)
     budgets = list_budgets(db, user_id)
     income = _get_user_income(db, user_id)
