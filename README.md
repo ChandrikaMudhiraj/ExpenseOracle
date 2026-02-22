@@ -15,23 +15,29 @@ The platform is built with a high-performance **FastAPI** backend, utilizing **C
 
 ### 1. Robust Enterprise Backend
 - **Unified Auth**: Secure user registration and login using JWT tokens and Bcrypt hashing.
-- **Relational Data**: Structured PostgreSQL models managed via SQLAlchemy for high-integrity financial records.
-- **Asynchronous Pipeline**: Implements an asynchronous scheduled financial intelligence pipeline using **Celery** and distributed task queues to precompute forecasts and anomaly reports.
+- **Relational Data & Migrations**: Structured PostgreSQL models with **Alembic** for professional, version-controlled schema migrations.
+- **Asynchronous Pipeline**: Implements an asynchronous scheduled financial intelligence pipeline using **Celery** and distributed task queues.
+- **Enterprise Scalability**: Integrated **Redis** caching layer for sub-millisecond retrieval of high-compute ML results (Health Scores, Forecasts).
 
 ### 2. High-Performance Intelligence Layer ("The Oracle")
-The system features a suite of specialized ML modules with built-in **Explainability**:
+The system features a suite of specialized ML modules with built-in **Explainability** and **Confidence Scoring**:
 - **Merchant Categorizer**: Automated NLP classification (95%+ accuracy targets).
-- **Predictive Forecaster**: Weighted moving average engine with MAPE (Mean Absolute Percentage Error) monitoring.
-- **Anomaly Detection**: Statistical guardian identifying outliers using adaptive Z-Score thresholds.
-- **Monte Carlo Investment Optimizer**: Professional-grade wealth simulation providing risk-adjusted returns and Sharpe ratio comparisons.
-- **Financial Health Score**: A proprietary 0-100 metric aggregating savings rates, budget adherence, and spending volatility.
+- **Predictive Forecaster**: Weighted moving average engine with **MAPE Tracking** and dynamic **Confidence Intervals**.
+- **Anomaly Detection**: Statistical guardian identifying outliers with **Anomaly Probability** scores using robust Z-Scores.
+- **Monte Carlo Investment Optimizer**: Professional wealth simulations providing **Risk Bands** (Low/Mod/High) and Sharpe Ratio analysis.
+- **Financial Health Score**: Unified 0-100 metric aggregating saving velocity, volatility, and budget adherence.
 
-### 3. Explainable Autonomous Engine (The Brain)
+### 3. Dashboard-Ready Visual Analytics
+The platform serves high-fidelity data series via the `AnalyticsEngine` for instant visualization:
+- **Forecast vs. Actuals**: Historical accuracy comparisons.
+- **Monte Carlo Distributions**: Wealth probability bell curves for portfolio projections.
+
+### 4. Explainable Autonomous Engine (The Brain)
 Synchronizes all intelligence into **Explainable Autonomous Actions**. Each action includes a transparency layer ("Why") to build user trust:
 - "Spending exceeded historical average by 22%."
 - "Forecast indicates budget breach in 9 days."
 
-### 4. Context-Aware AI Advisor
+### 5. Context-Aware AI Advisor
 A sophisticated conversational interface (`POST /ml/chat`) that goes beyond generic LLMs. It retrieves real-time user context—last 30 days spend, live forecasts, and health scores—to provide hyper-personalized recommendations.
 
 ---
