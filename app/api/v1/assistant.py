@@ -38,12 +38,17 @@ def get_summary(profile_id: int = 0, db=Depends(get_db)):
         raise HTTPException(status_code=503, detail="Assistant features disabled")
     # For demo: fetch sample expenses from DB if available, else empty
     from app.services.expense_service import list_expenses
-    from app.services.user_service import get_user_profile
 
+    # Try to load profile from DB; fall back to defaults
+    profile = {"income": 5000, "monthly_savings": 1000}
     try:
-        profile = get_user_profile(db, profile_id) if profile_id else {"income": 5000, "monthly_savings": 1000}
+        if profile_id:
+            from app.models.user import User
+            user = db.query(User).filter(User.id == profile_id).first()
+            if user:
+                profile = {"income": getattr(user, "monthly_income", 5000), "monthly_savings": getattr(user, "monthly_savings", 1000)}
     except Exception:
-        profile = {"income": 5000, "monthly_savings": 1000}
+        pass
 
     try:
         expenses = list_expenses(db, profile_id) if profile_id else []
