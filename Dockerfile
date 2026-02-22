@@ -1,6 +1,12 @@
 # Production-Grade Multi-Purpose Dockerfile
 # Optimized for FastAPI and Celery Workers
 
+FROM node:18-bullseye AS frontend
+WORKDIR /src
+COPY app/frontend/package.json app/frontend/vite.config.js app/frontend/index.html ./
+COPY app/frontend/src ./src
+RUN npm ci && npm run build
+
 FROM python:3.11-slim
 
 # Set environment variables
@@ -22,11 +28,14 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# Copy backend project files
 COPY . .
+
+# Copy frontend build output into static folder
+COPY --from=frontend /src/../static ./app/static
 
 # Expose port (default for FastAPI)
 EXPOSE 8000
 
-# Entrypoint will be overridden by docker-compose for workers
+# Entrypoint
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
