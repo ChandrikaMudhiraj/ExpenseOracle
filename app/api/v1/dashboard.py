@@ -7,6 +7,7 @@ from typing import List, Dict
 from app.autonomous_controller import AutonomousController
 from app.utils.financial_context import simulate_inflation
 from app.core.config import get_settings
+from fastapi import Header, HTTPException
 
 settings = get_settings()
 
@@ -34,8 +35,11 @@ def forecast_chart(months: int = Query(6, ge=1, le=24)):
 
 
 @router.get("/autonomous_actions")
-def autonomous_actions():
-    # demo: run controller with synthetic data
+def autonomous_actions(api_key: str | None = Header(None)):
+    # secure demo: require admin API key when configured
+    if settings.ADMIN_API_KEY:
+        if not api_key or api_key != settings.ADMIN_API_KEY:
+            raise HTTPException(status_code=401, detail="Invalid API key")
     if not settings.AUTONOMOUS_ENABLED:
         return JSONResponse(status_code=503, content={"detail": "Autonomous features disabled"})
     expenses = [{"amount": 1200}, {"amount": 1500}, {"amount": 900}]
