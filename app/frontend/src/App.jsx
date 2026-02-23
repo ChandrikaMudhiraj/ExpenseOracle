@@ -1,65 +1,80 @@
-import React, {useState} from 'react'
+import React, { useState, useEffect } from 'react';
+import { Sidebar } from './components/Layout';
+import { Dashboard } from './pages/Dashboard';
+import { Assistant } from './pages/Assistant';
+import { Expenses } from './pages/Expenses';
+import { Budgets } from './pages/Budgets';
+import { Auth } from './pages/Auth';
+import { InvestmentSimulator } from './pages/InvestmentSimulator';
+import { AutonomousActions } from './pages/AutonomousActions';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
-// Simple SPA: Dashboard + Assistant tabs. Fetches backend endpoints.
-export default function App(){
-  const [tab, setTab] = useState('dashboard')
-  return (
-    <div style={{fontFamily:'Arial, sans-serif', padding:20}}>
-      <h1>ExpenseOracle Demo</h1>
-      <nav style={{marginBottom:12}}>
-        <button onClick={()=>setTab('dashboard')}>Dashboard</button>
-        <button onClick={()=>setTab('assistant')} style={{marginLeft:8}}>Assistant</button>
-      </nav>
-      <div>
-        {tab==='dashboard' ? <Dashboard /> : <Assistant />}
-      </div>
-    </div>
-  )
-}
+export default function App() {
+  const [activeTab, setTab] = useState('dashboard');
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-function Dashboard(){
-  const [chartUrl] = useState('/dashboard/forecast_chart?months=6')
-  const [actions, setActions] = useState(null)
+  useEffect(() => {
+    const savedUser = localStorage.getItem('oracle_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('oracle_user');
+      }
+    }
+    setLoading(false);
+  }, []);
 
-  async function runActions(){
-    const res = await fetch('/dashboard/autonomous_actions')
-    const j = await res.json()
-    setActions(j)
+  const handleAuthSuccess = (data) => {
+    const userToStore = data.user || { id: 1, email: 'user@example.com' };
+    localStorage.setItem('oracle_user', JSON.stringify(userToStore));
+    setUser(userToStore);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('oracle_user');
+    setUser(null);
+    setTab('dashboard');
+  };
+
+  if (loading) return <div style={{ background: 'var(--background)', minHeight: '100vh', color: 'white' }}></div>;
+
+  if (!user) {
+    return <Auth onAuthSuccess={handleAuthSuccess} />;
   }
 
   return (
-    <div>
-      <h2>Visual Dashboard</h2>
-      <div>
-        <img src={chartUrl} alt="forecast" style={{maxWidth:800}} />
-      </div>
-      <div style={{marginTop:12}}>
-        <button onClick={runActions}>Run Autonomous Demo</button>
-        {actions && <pre style={{background:'#f6f8fa', padding:12}}>{JSON.stringify(actions, null, 2)}</pre>}
-      </div>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar activeTab={activeTab} setTab={setTab} onLogout={handleLogout} user={user} />
+
+      <main style={{
+        flex: 1,
+        marginLeft: 'calc(var(--sidebar-width) + 40px)',
+        padding: '40px 40px 40px 0',
+        maxWidth: '1200px'
+      }}>
+        <ErrorBoundary>
+          {activeTab === 'dashboard' && <Dashboard user={user} />}
+          {activeTab === 'assistant' && <Assistant user={user} />}
+          {activeTab === 'analytics' && <Dashboard user={user} />}
+          {activeTab === 'anomalies' && <Dashboard user={user} />}
+          {activeTab === 'expenses' && <Expenses user={user} />}
+          {activeTab === 'budgets' && <Budgets user={user} />}
+          {activeTab === 'simulator' && <InvestmentSimulator user={user} />}
+          {activeTab === 'autonomous' && <AutonomousActions user={user} />}
+
+          {['dashboard', 'assistant', 'expenses', 'budgets', 'simulator', 'autonomous', 'analytics', 'anomalies'].indexOf(activeTab) === -1 && (
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
+              <h2 style={{ marginBottom: '10px' }}>Intelligence Module Coming Soon</h2>
+              <p>We are currently calibrating the {activeTab} autonomous engine.</p>
+              <button className="btn-primary" onClick={() => setTab('dashboard')} style={{ marginTop: '20px' }}>
+                Return to Dashboard
+              </button>
+            </div>
+          )}
+        </ErrorBoundary>
+      </main>
     </div>
-  )
-}
-
-function Assistant(){
-  const [salary, setSalary] = useState(50000)
-  const [result, setResult] = useState(null)
-
-  async function submit(){
-    const payload = {salary, profile:{monthly_savings:5000}, expenses:[]}
-    const res = await fetch('/assistant/salary_event', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
-    setResult(await res.json())
-  }
-
-  return (
-    <div>
-      <h2>Assistant</h2>
-      <div>
-        <label>Monthly Salary: </label>
-        <input value={salary} onChange={e=>setSalary(Number(e.target.value))} />
-        <button onClick={submit} style={{marginLeft:8}}>Suggest Allocation</button>
-      </div>
-      {result && <pre style={{background:'#f6f8fa', padding:12, marginTop:12}}>{JSON.stringify(result, null, 2)}</pre>}
-    </div>
-  )
+  );
 }
