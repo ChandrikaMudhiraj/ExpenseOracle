@@ -23,7 +23,7 @@ export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
     }}>
       <div style={{ padding: '0 12px 32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ width: 32, height: 32, background: 'var(--primary)', borderRadius: 8 }}></div>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Oracle</h2>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>ExpenseOracle</h2>
       </div>
 
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -80,9 +80,9 @@ export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
           </div>
         </div>
 
-        <button className="btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button className="btn-ghost" onClick={() => setTab('profile')} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Settings size={20} />
-          <span>Settings</span>
+          <span>Profile & Settings</span>
         </button>
         <button className="btn-ghost" onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--danger)' }}>
           <LogOut size={20} />

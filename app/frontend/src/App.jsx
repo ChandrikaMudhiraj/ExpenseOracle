@@ -8,6 +8,7 @@ import { GoalPlanning } from './pages/GoalPlanning';
 import { Auth } from './pages/Auth';
 import { InvestmentSimulator } from './pages/InvestmentSimulator';
 import { AutonomousActions } from './pages/AutonomousActions';
+import { Profile } from './pages/Profile';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
@@ -62,10 +63,12 @@ export default function App() {
           {activeTab === 'anomalies' && <Dashboard user={user} />}
           {activeTab === 'expenses' && <Expenses user={user} />}
           {activeTab === 'budgets' && <Budgets user={user} />}
+          {activeTab === 'goals' && <GoalPlanning user={user} />}
           {activeTab === 'simulator' && <InvestmentSimulator user={user} />}
           {activeTab === 'autonomous' && <AutonomousActions user={user} />}
+          {activeTab === 'profile' && <Profile user={user} />}
 
-          {['dashboard', 'assistant', 'expenses', 'budgets', 'simulator', 'autonomous', 'analytics', 'anomalies'].indexOf(activeTab) === -1 && (
+          {['dashboard', 'assistant', 'expenses', 'budgets', 'goals', 'simulator', 'autonomous', 'analytics', 'anomalies', 'profile'].indexOf(activeTab) === -1 && (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
               <h2 style={{ marginBottom: '10px' }}>Intelligence Module Coming Soon</h2>
               <p>We are currently calibrating the {activeTab} autonomous engine.</p>
