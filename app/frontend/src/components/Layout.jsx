@@ -1,10 +1,11 @@
 import React from 'react';
-import { Home, Activity, Target, Bot, Cpu, Settings, LogOut, Calculator, ShieldCheck } from 'lucide-react';
+import { Home, Activity, Target, Bot, Cpu, Settings, LogOut, Calculator, ShieldCheck, Briefcase } from 'lucide-react';
 export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'expenses', label: 'Expenses', icon: Activity },
     { id: 'budgets', label: 'Budgets', icon: Target },
+    { id: 'goals', label: 'Goal Planning', icon: Briefcase },
     { id: 'assistant', label: 'AI Assistant', icon: Bot },
     { id: 'simulator', label: 'Simulator', icon: Calculator },
     { id: 'autonomous', label: 'Autonomy', icon: Cpu },

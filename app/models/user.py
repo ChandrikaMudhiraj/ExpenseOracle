@@ -11,6 +11,9 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     monthly_income = Column(Float, default=0.0)
+    monthly_savings = Column(Float, default=0.0)
+    risk_tolerance = Column(String, default="Moderate") # Conservative, Moderate, Aggressive
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expenses = relationship("Expense", back_populates="user")
     budgets = relationship("Budget", back_populates="user")
+    goals = relationship("Goal", back_populates="user")

@@ -4,6 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Assistant } from './pages/Assistant';
 import { Expenses } from './pages/Expenses';
 import { Budgets } from './pages/Budgets';
+import { GoalPlanning } from './pages/GoalPlanning';
 import { Auth } from './pages/Auth';
 import { InvestmentSimulator } from './pages/InvestmentSimulator';
 import { AutonomousActions } from './pages/AutonomousActions';

@@ -85,5 +85,40 @@ export const api = {
     runAutonomousDemo: async () => {
         const res = await fetch(`${BASE_URL}/dashboard/autonomous_actions`);
         return res.json();
+    },
+
+    // Profile & Goals
+    updateProfile: async (userId, profileData) => {
+        const { income, savings, risk } = profileData;
+        const res = await fetch(`${BASE_URL}/auth/profile?user_id=${userId}&income=${income}&savings=${savings}&risk=${risk}`, {
+            method: 'PUT'
+        });
+        return res.json();
+    },
+    getGoals: async (userId = 1) => {
+        const res = await fetch(`${BASE_URL}/goals/?user_id=${userId}`);
+        return res.json();
+    },
+    addGoal: async (userId, goalData) => {
+        const res = await fetch(`${BASE_URL}/goals/?user_id=${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(goalData)
+        });
+        return res.json();
+    },
+    updateGoal: async (goalId, goalData) => {
+        const res = await fetch(`${BASE_URL}/goals/${goalId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(goalData)
+        });
+        return res.json();
+    },
+    deleteGoal: async (goalId) => {
+        const res = await fetch(`${BASE_URL}/goals/${goalId}`, {
+            method: 'DELETE'
+        });
+        return res.json();
     }
 };

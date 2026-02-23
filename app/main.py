@@ -6,6 +6,7 @@ from app.core.database import engine, SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.models.user import Base, User
+from app.models.goal import Goal
 from app.schemas.user import UserCreate
 import bcrypt
 import importlib
@@ -15,6 +16,7 @@ auth = importlib.import_module("app.api.v1.auth")
 expenses = importlib.import_module("app.api.v1.expenses")
 budgets = importlib.import_module("app.api.v1.budgets")
 ml = importlib.import_module("app.api.v1.ml")
+goals = importlib.import_module("app.api.v1.goals")
 try:
 	health = importlib.import_module("app.api.v1.health")
 except Exception:
@@ -72,6 +74,7 @@ app.include_router(auth.router)
 app.include_router(expenses.router)
 app.include_router(budgets.router)
 app.include_router(ml.router)
+app.include_router(goals.router)
 if health is not None and hasattr(health, "router"):
 	app.include_router(health.router)
 if settings.ENABLE_DASHBOARD and dashboard is not None and hasattr(dashboard, "router"):
