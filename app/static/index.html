@@ -1,39 +1,33 @@
 <!doctype html>
-<html>
+<!--
+  ExpenseOracle Static Frontend (single-file SPA entry)
+  - Lightweight, no framework, designed for demos and judges.
+  - Uses fetch() to call backend endpoints under /dashboard, /ml, /assistant.
+  - Files: main JS in ./js/main.js, styles in ./css/style.css
+-->
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>ExpenseOracle Demo Dashboard</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 24px; }
-      button { margin: 8px 0; }
-      pre { background: #f6f8fa; padding: 12px; }
-    </style>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ExpenseOracle — Demo UI</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
   </head>
   <body>
-    <h1>ExpenseOracle — Demo Dashboard</h1>
-    <p>Use the buttons below to fetch a forecast chart and simulate autonomous actions.</p>
+    <header class="site-header">
+      <h1>ExpenseOracle</h1>
+      <nav>
+        <button data-route="dashboard">Dashboard</button>
+        <button data-route="assistant">Assistant</button>
+        <button data-route="ml">ML</button>
+      </nav>
+    </header>
 
-    <div>
-      <button id="chartBtn">Open Forecast Chart</button>
-      <div><img id="chartImg" alt="forecast chart" style="max-width:600px; display:block; margin-top:8px;"/></div>
-    </div>
+    <main id="app">
+      <!-- Views are rendered here by JS -->
+    </main>
 
-    <div style="margin-top:20px;">
-      <button id="autoBtn">Run Autonomous Demo</button>
-      <pre id="autoOut">No actions yet.</pre>
-    </div>
+    <footer class="site-footer">Demo UI • Not for production</footer>
 
-    <script>
-      document.getElementById('chartBtn').onclick = function(){
-        const url = '/dashboard/forecast_chart?months=6';
-        document.getElementById('chartImg').src = url;
-      };
-
-      document.getElementById('autoBtn').onclick = async function(){
-        const res = await fetch('/dashboard/autonomous_actions');
-        const json = await res.json();
-        document.getElementById('autoOut').textContent = JSON.stringify(json, null, 2);
-      };
-    </script>
+    <script src="/static/js/main.js"></script>
   </body>
 </html>

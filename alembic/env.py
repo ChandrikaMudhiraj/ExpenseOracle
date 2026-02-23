@@ -6,6 +6,8 @@ from sqlalchemy import pool
 from app.models.user import User
 from app.models.expense import Expense
 from app.models.budget import Budget
+from app.models.goal import Goal
+from app.models.autonomous_action import AutonomousAction
 
 from alembic import context
 

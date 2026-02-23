@@ -15,6 +15,9 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: EmailStr
+    monthly_income: float
+    monthly_savings: float
+    risk_tolerance: str
     created_at: datetime
 
     model_config = {

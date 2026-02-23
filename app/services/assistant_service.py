@@ -93,6 +93,7 @@ class AssistantService:
     def summary(self, profile: Dict[str, Any], expenses: List[Dict[str, Any]]) -> Dict[str, Any]:
         # Compose a short assistant summary using multiple helpers and DecisionEngine
         de = self.engine.evaluate(expenses, profile)
+        income = profile.get("income", profile.get("monthly_income", 5000))
         savings = profile.get("savings", profile.get("monthly_savings", 0))
         monthly_expense = sum(e.get("amount", 0) for e in expenses[-6:]) / max(1, len(expenses[-6:])) if expenses else 0
 
@@ -102,16 +103,23 @@ class AssistantService:
 
         recommended_actions = []
         if de.get("anomalies"):
-            recommended_actions.append("Review anomalies")
+            recommended_actions.append("Review recent anomalies")
         if ef.get("months_covered", 0) < 6:
-            recommended_actions.append("Increase emergency fund to 6 months")
+            recommended_actions.append(f"Build emergency fund to 6 months (currently {round(ef.get('months_covered', 0), 1)})")
+        if (savings / max(1.0, income)) < 0.2:
+            recommended_actions.append("Target a 20% savings rate by reducing discretionary spend")
 
         return {
             "financial_health_score": de.get("health_score") or 50,
             "emergency_buffer_months": round(ef.get("months_covered", 0), 2),
-            "savings_rate": f"{round((savings / max(1.0, profile.get('income', 1))) * 100, 1)}%",
+            "savings_rate": f"{round((savings / max(1.0, income)) * 100, 1)}%",
             "risk_alerts": len(de.get("anomalies") or []),
             "recommended_actions": recommended_actions,
             "credit_estimate": credit,
             "stress_score": round(stress, 2),
+            "user_context": {
+                "income": income,
+                "savings": savings,
+                "risk": profile.get("risk_tolerance", "Moderate")
+            }
         }

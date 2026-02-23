@@ -12,3 +12,14 @@ def create_user(db: Session, email: str, hashed_password: str):
     db.commit()
     db.refresh(user)
     return user
+
+
+def update_user_profile(db: Session, user_id: int, income: float, savings: float, risk: str):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        user.monthly_income = income
+        user.monthly_savings = savings
+        user.risk_tolerance = risk
+        db.commit()
+        db.refresh(user)
+    return user
