@@ -13,7 +13,13 @@ class FinancialHealthScore:
         Calculates the health score and identifies key contributors.
         """
         if not expenses or income <= 0:
-            return {"score": 50, "status": "Insufficient Data", "factors": {}}
+            return {
+                "score": 50,
+                "status": "Insufficient Data",
+                "factors": {},
+                "metrics": {"savings_rate_pct": 0.0, "budget_utilization_pct": 0.0, "volatility_index": 0.0},
+                "recommendations": ["Set your monthly income and add some expenses to get personalized advice."]
+            }
 
         total_spent = sum(e['amount'] for e in expenses)
         

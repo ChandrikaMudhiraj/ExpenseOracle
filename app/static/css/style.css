@@ -1,0 +1,18 @@
+/* ExpenseOracle demo styles (lightweight, demo-focused) */
+:root{
+  --bg:#ffffff; --muted:#6b7280; --accent:#0ea5a0;
+}
+body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;background:var(--bg);color:#111;margin:0}
+.site-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid #eee}
+.site-header h1{margin:0;font-size:20px}
+.site-header nav button{margin-left:8px;padding:8px 12px;border-radius:6px;border:1px solid #e6e6e6;background:#fff;cursor:pointer}
+.site-header nav button:hover{background:#f8f9fa}
+#app{padding:24px}
+.card{border:1px solid #eee;padding:16px;border-radius:8px;background:#fff;max-width:900px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}
+.muted{color:var(--muted)}
+.site-footer{padding:12px 24px;border-top:1px solid #eee;color:var(--muted);font-size:13px}
+
+.btn{display:inline-block;padding:8px 12px;background:var(--accent);color:#fff;border-radius:6px;border:none;cursor:pointer}
+.btn.secondary{background:#64748b}
