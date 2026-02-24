@@ -6,45 +6,45 @@
 
 ## 🌟 What It Does
 
-ExpenseOracle shifts the user's role from **active manager** to **overseer**. Instead of manually reviewing spreadsheets, users interact with a live Oracle Intelligence Layer that forecasts spending, detects anomalies, plans goals, and autonomously recommends financial rebalancing actions — all explained in plain English.
+    ExpenseOracle shifts the user's role from **active manager** to **overseer**. Instead of manually reviewing spreadsheets, users interact with a live Oracle Intelligence Layer that forecasts spending, detects anomalies, plans goals, and autonomously recommends financial rebalancing actions — all explained in plain English.
 
 ---
 
 ## 🏗️ System Architecture
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│                   React 18 SPA (Vite + Vanilla CSS)                │
-│  Auth · Dashboard · Expenses · Budgets · Goals · AI Assistant      │
-│        Investment Simulator · Autonomous Engine · Profile          │
-└─────────────────────────┬──────────────────────────────────────────┘
-                          │ HTTP REST
-┌─────────────────────────▼──────────────────────────────────────────┐
-│                  FastAPI Backend  :8000                             │
-│  /auth  /expenses  /budgets  /goals  /ml/*  /assistant             │
-│  ┌─────────────────┐   ┌──────────────────────────────────────┐   │
-│  │  Service Layer  │   │       Oracle ML Intelligence Layer   │   │
-│  │ auth_service    │   │  forecaster · anomaly_detector       │   │
-│  │ expense_service │   │  health_score · advisor_chatbot      │   │
-│  │ budget_service  │   │  investment_optimizer · auto_engine  │   │
-│  │ assistant_svc   │   │  analytics · metrics_manager         │   │
-│  └────────┬────────┘   └──────────────────┬───────────────────┘   │
-│           │                               │                        │
-│  ┌────────▼───────────────────────────────▼───────────────────┐   │
-│  │              CacheManager (Redis TTL Wrapper)               │   │
-│  └────────────────────────────────────────────────────────────┘   │
-└──────────┬──────────────────────────────────┬──────────────────────┘
-           │                                  │
-    ┌──────▼──────┐                   ┌───────▼──────┐
-    │ PostgreSQL  │                   │    Redis      │
-    │  :5433      │                   │   :6379       │
-    │ users       │                   │forecast: 1h   │
-    │ expenses    │                   │health: 30min  │
-    │ budgets     │                   └───────────────┘
-    │ goals       │
-    └─────────────┘
-         ↑
-    Celery Worker + Beat (background scheduled jobs)
+                ┌────────────────────────────────────────────────────────────────────┐
+                │                   React 18 SPA (Vite + Vanilla CSS)                │
+                │  Auth · Dashboard · Expenses · Budgets · Goals · AI Assistant      │
+                │        Investment Simulator · Autonomous Engine · Profile          │
+                └─────────────────────────┬──────────────────────────────────────────┘
+                                        │ HTTP REST
+                ┌─────────────────────────▼─────────────────────────────────────────┐
+                │                  FastAPI Backend  :8000                           │
+                │  /auth  /expenses  /budgets  /goals  /ml/*  /assistant            │
+                │  ┌─────────────────┐   ┌──────────────────────────────────────┐   │
+                │  │  Service Layer  │   │       Oracle ML Intelligence Layer   │   │
+                │  │ auth_service    │   │  forecaster · anomaly_detector       │   │
+                │  │ expense_service │   │  health_score · advisor_chatbot      │   │
+                │  │ budget_service  │   │  investment_optimizer · auto_engine  │   │
+                │  │ assistant_svc   │   │  analytics · metrics_manager         │   │
+                │  └────────┬────────┘   └──────────────────┬───────────────────┘   │
+                │           │                               │                       │
+                │  ┌────────▼───────────────────────────────▼───────────────────┐   │
+                │  │              CacheManager (Redis TTL Wrapper)              │   │
+                │  └────────────────────────────────────────────────────────────┘   │
+                └──────────┬──────────────────────────────────┬─────────────────────┘
+                        │                                  │
+                    ┌──────▼──────┐                   ┌───────▼──────┐
+                    │ PostgreSQL  │                   │    Redis      │
+                    │  :5433      │                   │   :6379       │
+                    │ users       │                   │forecast: 1h   │
+                    │ expenses    │                   │health: 30min  │
+                    │ budgets     │                   └───────────────┘
+                    │ goals       │
+                    └─────────────┘
+                        ↑
+                    Celery Worker + Beat (background scheduled jobs)
 ```
 
 ---
