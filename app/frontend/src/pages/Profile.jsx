@@ -4,9 +4,10 @@ import { Card } from '../components/Layout';
 import { api } from '../services/api';
 
 export const Profile = ({ user }) => {
-    const [income, setIncome] = useState('');
-    const [savings, setSavings] = useState('');
-    const [risk, setRisk] = useState('Moderate');
+    const [income, setIncome] = useState(user?.monthly_income || '');
+    const [savings, setSavings] = useState(user?.monthly_savings || '');
+    const [targetPct, setTargetPct] = useState(user?.savings_target_percent || 20);
+    const [risk, setRisk] = useState(user?.risk_tolerance || 'Moderate');
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -20,10 +21,11 @@ export const Profile = ({ user }) => {
         setError('');
         setLoading(true);
         try {
-            await api.updateProfile(user?.id || 1, {
+            await api.updateProfile({
                 income: parseFloat(income),
                 savings: parseFloat(savings) || 0,
-                risk
+                risk: risk,
+                target_pct: parseFloat(targetPct)
             });
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
@@ -161,7 +163,7 @@ export const Profile = ({ user }) => {
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.05em'
                             }}>
-                                Monthly Savings Target ($)
+                                Monthly Savings ($)
                             </label>
                             <div style={{ position: 'relative' }}>
                                 <TrendingUp size={16} style={{ position: 'absolute', left: 14, top: 14, color: 'var(--muted)' }} />
@@ -180,11 +182,44 @@ export const Profile = ({ user }) => {
                                         padding: '12px 14px 12px 40px',
                                         color: 'white',
                                         fontSize: '1rem',
-                                        outline: 'none',
-                                        transition: 'border-color 0.2s ease'
+                                        outline: 'none'
                                     }}
-                                    onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                                    onBlur={e => e.target.style.borderColor = 'var(--glass-border)'}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style={{
+                                display: 'block',
+                                fontSize: '0.85rem',
+                                fontWeight: 600,
+                                color: 'var(--muted)',
+                                marginBottom: '10px',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em'
+                            }}>
+                                Savings Target (%)
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <Check size={16} style={{ position: 'absolute', left: 14, top: 14, color: 'var(--muted)' }} />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    placeholder="e.g. 20"
+                                    value={targetPct}
+                                    onChange={e => setTargetPct(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        background: 'rgba(255, 255, 255, 0.03)',
+                                        border: '1px solid var(--glass-border)',
+                                        borderRadius: '12px',
+                                        padding: '12px 14px 12px 40px',
+                                        color: 'white',
+                                        fontSize: '1rem',
+                                        outline: 'none'
+                                    }}
                                 />
                             </div>
                         </div>

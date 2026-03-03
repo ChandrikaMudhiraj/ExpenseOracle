@@ -8,6 +8,7 @@ export const Budgets = ({ user }) => {
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
+    const [editingBudget, setEditingBudget] = useState(null);
     const [newBudget, setNewBudget] = useState({ category: 'Food', limit_amount: '' });
 
     const fetchData = async () => {
@@ -34,15 +35,37 @@ export const Budgets = ({ user }) => {
     const handleAdd = async (e) => {
         e.preventDefault();
         try {
-            await api.addBudget(user?.id || 1, {
+            const payload = {
                 ...newBudget,
                 limit_amount: parseFloat(newBudget.limit_amount)
-            });
+            };
+            if (editingBudget) {
+                await api.updateBudget(user?.id || 1, editingBudget.id, payload);
+            } else {
+                await api.addBudget(user?.id || 1, payload);
+            }
             setShowAdd(false);
+            setEditingBudget(null);
             setNewBudget({ category: 'Food', limit_amount: '' });
             fetchData();
         } catch (err) {
-            console.error("Failed to add budget", err);
+            console.error("Failed to save budget", err);
+        }
+    };
+
+    const handleEdit = (budget) => {
+        setEditingBudget(budget);
+        setNewBudget({ category: budget.category, limit_amount: budget.limit_amount });
+        setShowAdd(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this budget limit?")) return;
+        try {
+            await api.deleteBudget(user?.id || 1, id);
+            fetchData();
+        } catch (err) {
+            console.error("Failed to delete budget", err);
         }
     };
 
@@ -56,16 +79,16 @@ export const Budgets = ({ user }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Budgets</h1>
-                    <p style={{ color: 'var(--muted)' }}>Track your spending limits by category</p>
+                    <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Monthly Spending Limits</h1>
+                    <p style={{ color: 'var(--muted)' }}>Set how much you want to spend in each category</p>
                 </div>
-                <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setShowAdd(true)}>
-                    <TrendingUp size={18} /> Set Budget
+                <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => { setEditingBudget(null); setNewBudget({ category: 'Food', limit_amount: '' }); setShowAdd(true); }}>
+                    <TrendingUp size={18} /> Set New Limit
                 </button>
             </header>
 
             {showAdd && (
-                <Card title="Set New Category Budget">
+                <Card title={editingBudget ? "Update Limit" : "Set New Spending Limit"}>
                     <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px' }}>Category</label>
@@ -78,7 +101,7 @@ export const Budgets = ({ user }) => {
                             </select>
                         </div>
                         <div>
-                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px' }}>Monthly Limit ($)</label>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px' }}>Monthly Spending Limit ($)</label>
                             <input
                                 type="number"
                                 value={newBudget.limit_amount}
@@ -112,6 +135,10 @@ export const Budgets = ({ user }) => {
                                 <div>
                                     <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>${spent.toFixed(0)}</span>
                                     <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}> of ${budget.limit_amount}</span>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                                        <button onClick={() => handleEdit(budget)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}>Edit</button>
+                                        <button onClick={() => handleDelete(budget.id)} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}>Delete</button>
+                                    </div>
                                 </div>
                                 {isOver && <AlertTriangle color="var(--danger)" size={20} />}
                             </div>
@@ -127,7 +154,7 @@ export const Budgets = ({ user }) => {
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                                 <span style={{ color: isOver ? 'var(--danger)' : 'var(--muted)' }}>
-                                    {isOver ? 'Exceeded' : `${(budget.limit_amount - spent).toFixed(0)} remaining`}
+                                    {isOver ? 'Limit Crossed' : `${(budget.limit_amount - spent).toFixed(0)} Money Left`}
                                 </span>
                                 <span style={{ fontWeight: 600 }}>{percent.toFixed(0)}%</span>
                             </div>

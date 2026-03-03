@@ -7,6 +7,8 @@ export const Auth = ({ onAuthSuccess }) => {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [monthlyIncome, setMonthlyIncome] = useState('');
+    const [riskTolerance, setRiskTolerance] = useState('Moderate');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -20,7 +22,7 @@ export const Auth = ({ onAuthSuccess }) => {
                 const res = await api.login(email, password);
                 onAuthSuccess(res);
             } else {
-                await api.register(email, password);
+                await api.register(email, password, parseFloat(monthlyIncome), riskTolerance);
                 const res = await api.login(email, password);
                 onAuthSuccess(res);
             }
@@ -43,19 +45,20 @@ export const Auth = ({ onAuthSuccess }) => {
             <div className="animate-fade-in" style={{ width: '100%', maxWidth: '400px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <div style={{
-                        width: 64,
-                        height: 64,
-                        background: 'var(--primary)',
-                        borderRadius: 16,
+                        width: 80,
+                        height: 80,
                         margin: '0 auto 20px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        borderRadius: 16,
+                        overflow: 'hidden',
+                        boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
                     }}>
-                        <Sparkles size={32} color="white" />
+                        <img src="app/frontend/src/assets/logo.png" alt="ExpenseOracle Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '8px' }}>ExpenseOracle</h1>
-                    <p style={{ color: 'var(--muted)' }}>Precision intelligence for your wealth</p>
+                    <h1 style={{ fontSize: '2.4rem', fontWeight: 800, marginBottom: '8px', background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ExpenseOracle</h1>
+                    <p style={{ color: 'var(--muted)', fontSize: '1.1rem' }}>Smart tools for your everyday money</p>
                 </div>
 
                 <Card>
@@ -117,6 +120,51 @@ export const Auth = ({ onAuthSuccess }) => {
                                     }}
                                 />
                             </div>
+
+                            {!isLogin && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div style={{ position: 'relative' }}>
+                                        <Sparkles style={{ position: 'absolute', left: 12, top: 12, color: 'var(--muted)' }} size={18} />
+                                        <input
+                                            type="number"
+                                            placeholder="Monthly Income ($)"
+                                            value={monthlyIncome}
+                                            onChange={(e) => setMonthlyIncome(e.target.value)}
+                                            required
+                                            style={{
+                                                width: '100%',
+                                                background: 'rgba(255, 255, 255, 0.03)',
+                                                border: '1px solid var(--glass-border)',
+                                                borderRadius: '8px',
+                                                padding: '12px 12px 12px 42px',
+                                                color: 'white',
+                                                outline: 'none'
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ position: 'relative' }}>
+                                        <label style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '4px', display: 'block' }}>Risk Preference</label>
+                                        <select
+                                            value={riskTolerance}
+                                            onChange={(e) => setRiskTolerance(e.target.value)}
+                                            style={{
+                                                width: '100%',
+                                                background: 'rgba(30,30,45, 1)',
+                                                border: '1px solid var(--glass-border)',
+                                                borderRadius: '8px',
+                                                padding: '12px',
+                                                color: 'white',
+                                                outline: 'none',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <option value="Conservative">Conservative (Low Risk)</option>
+                                            <option value="Moderate">Moderate (Balanced)</option>
+                                            <option value="Aggressive">Aggressive (High Growth)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <button

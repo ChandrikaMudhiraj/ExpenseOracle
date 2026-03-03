@@ -5,7 +5,7 @@ import { api } from '../services/api';
 
 export const Assistant = ({ user }) => {
     const [messages, setMessages] = useState([
-        { role: 'assistant', text: 'Hello! I am your ExpenseOracle. How can I help you optimize your finances today?' }
+        { role: 'assistant', text: 'Hi! I am your money assistant. I am here to help you manage your spending and save better. How can I help you today?' }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export const Assistant = ({ user }) => {
                 <h1 style={{ fontSize: '1.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Sparkles color="var(--primary)" /> AI Assistant
                 </h1>
-                <p style={{ color: 'var(--muted)' }}>Contextual financial advice powered by ML</p>
+                <p style={{ color: 'var(--muted)' }}>Helpful daily money tips and advice</p>
             </header>
 
             <Card>
@@ -95,10 +95,10 @@ export const Assistant = ({ user }) => {
                 <Card title="Suggested Actions" icon={AlertCircle}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <button className="btn-ghost" style={{ textAlign: 'left', fontSize: '0.85rem', padding: '12px', border: '1px solid var(--glass-border)' }}>
-                            "Rebalance my 'Eating Out' budget"
+                            "Help me plan for a gift"
                         </button>
                         <button className="btn-ghost" style={{ textAlign: 'left', fontSize: '0.85rem', padding: '12px', border: '1px solid var(--glass-border)' }}>
-                            "Analyze my last salary event"
+                            "Am I spending too much on food?"
                         </button>
                     </div>
                 </Card>

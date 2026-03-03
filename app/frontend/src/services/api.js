@@ -11,11 +11,17 @@ export const api = {
         if (!res.ok) throw new Error('Login failed');
         return res.json();
     },
-    register: async (email, password) => {
+    register: async (email, password, monthlyIncome, riskTolerance = 'Moderate', savingsTarget = 20.0) => {
         const res = await fetch(`${BASE_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({
+                email,
+                password,
+                monthly_income: parseFloat(monthlyIncome),
+                risk_tolerance: riskTolerance,
+                savings_target_percent: parseFloat(savingsTarget)
+            })
         });
         if (!res.ok) throw new Error('Registration failed');
         return res.json();
@@ -34,6 +40,20 @@ export const api = {
         });
         return res.json();
     },
+    updateExpense: async (userId, expenseId, expenseData) => {
+        const res = await fetch(`${BASE_URL}/expenses/${expenseId}?user_id=${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(expenseData)
+        });
+        return res.json();
+    },
+    deleteExpense: async (userId, expenseId) => {
+        const res = await fetch(`${BASE_URL}/expenses/${expenseId}?user_id=${userId}`, {
+            method: 'DELETE'
+        });
+        return res.json();
+    },
 
     // Budgets
     getBudgets: async (userId = 1) => {
@@ -48,38 +68,52 @@ export const api = {
         });
         return res.json();
     },
+    updateBudget: async (userId, budgetId, budgetData) => {
+        const res = await fetch(`${BASE_URL}/budgets/${budgetId}?user_id=${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(budgetData)
+        });
+        return res.json();
+    },
+    deleteBudget: async (userId, budgetId) => {
+        const res = await fetch(`${BASE_URL}/budgets/${budgetId}?user_id=${userId}`, {
+            method: 'DELETE'
+        });
+        return res.json();
+    },
 
     // ML & Intelligence
-    getForecast: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/forecast?user_id=${userId}`);
+    getForecast: async () => {
+        const res = await fetch(`${BASE_URL}/ml/forecast`);
         return res.json();
     },
-    getAnomalies: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/anomalies?user_id=${userId}`);
+    getAnomalies: async (threshold = 2.0) => {
+        const res = await fetch(`${BASE_URL}/ml/anomalies?threshold=${threshold}`);
         return res.json();
     },
-    getHealthScore: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/health-score?user_id=${userId}`);
+    getHealthScore: async () => {
+        const res = await fetch(`${BASE_URL}/ml/health-score`);
         return res.json();
     },
-    getAutonomousActions: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/autonomous-actions?user_id=${userId}`);
+    getAutonomousActions: async () => {
+        const res = await fetch(`${BASE_URL}/ml/autonomous-actions`);
         return res.json();
     },
     simulateInvestments: async (principal, years = 1) => {
         const res = await fetch(`${BASE_URL}/ml/investment-simulator?principal=${principal}&years=${years}`);
         return res.json();
     },
-    oracleChat: async (userId, query) => {
-        const res = await fetch(`${BASE_URL}/ml/chat?user_id=${userId}`, {
+    oracleChat: async (query) => {
+        const res = await fetch(`${BASE_URL}/ml/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query })
         });
         return res.json();
     },
-    getAnalytics: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/analytics?user_id=${userId}`);
+    getAnalytics: async () => {
+        const res = await fetch(`${BASE_URL}/ml/analytics`);
         return res.json();
     },
     runAutonomousDemo: async () => {
@@ -88,10 +122,16 @@ export const api = {
     },
 
     // Profile & Goals
-    updateProfile: async (userId, profileData) => {
-        const { income, savings, risk } = profileData;
-        const res = await fetch(`${BASE_URL}/auth/profile?user_id=${userId}&income=${income}&savings=${savings}&risk=${risk}`, {
-            method: 'PUT'
+    updateProfile: async (profileData) => {
+        const res = await fetch(`${BASE_URL}/auth/profile`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                monthly_income: parseFloat(profileData.income),
+                monthly_savings: parseFloat(profileData.savings),
+                risk_tolerance: profileData.risk,
+                savings_target_percent: parseFloat(profileData.target_pct || 20.0)
+            })
         });
         return res.json();
     },

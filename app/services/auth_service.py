@@ -6,15 +6,13 @@ from app.repository.user_repository import (
 from app.core.security import hash_password, verify_password, create_access_token
 
 
-def register_user(db: Session, email: str, password: str):
+def register_user(db: Session, email: str, password: str, monthly_income: float = 0.0, risk_tolerance: str = "Moderate", savings_target_percent: float = 20.0):
     existing_user = get_user_by_email(db, email)
     if existing_user:
         raise ValueError("User already exists")
 
     hashed = hash_password(password)
-    print("PASSWORD TYPE:", type(password))
-    print("PASSWORD VALUE:", password)
-    return create_user(db, email, hashed)
+    return create_user(db, email, hashed, monthly_income, risk_tolerance, savings_target_percent)
 
 
 def login_user(db: Session, email: str, password: str):

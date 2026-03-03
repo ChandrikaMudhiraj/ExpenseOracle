@@ -22,7 +22,7 @@ export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
       padding: '24px 12px'
     }}>
       <div style={{ padding: '0 12px 32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: 32, height: 32, background: 'var(--primary)', borderRadius: 8 }}></div>
+        <img src="/src/assets/logo.png" alt="ExpenseOracle Logo" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} />
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>ExpenseOracle</h2>
       </div>
 

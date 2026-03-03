@@ -33,12 +33,12 @@ class AssistantService:
         current_savings = profile.get("monthly_savings", savings)
         if current_savings < salary * 0.2:
             recommendation["savings"] = round(max(current_savings, salary * 0.2), 2)
-            reason.append("Savings rate below recommended 20% threshold")
+            reason.append("You are saving less than 20% of your income. Try reducing small daily expenses to improve this.")
 
         # if avg spend > essentials, suggest cut to lifestyle
         if avg_month_spend > recommendation["essentials"]:
             recommendation["lifestyle"] = round(recommendation["lifestyle"] * 0.8, 2)
-            reason.append("Recent spending suggests essentials exceed baseline; suggest trimming lifestyle")
+            reason.append("Your spending on essentials is a bit high; consider reducing small lifestyle costs")
 
         return {
             "action": "salary_allocation_plan",
@@ -53,7 +53,7 @@ class AssistantService:
         message = "Spending matches income growth."
         if spend_growth > income_growth * 1.1:
             severity = "moderate"
-            message = "Your spending increased faster than your income. Consider adjusting savings to maintain financial growth."
+            message = "Your spending increased faster than your income. Try to keep it more stable to help you save better."
         return {"message": message, "severity": severity, "income_growth": income_growth, "spend_growth": spend_growth}
 
     def plan_goal(self, goal: Dict[str, Any], profile: Dict[str, Any]) -> Dict[str, Any]:
@@ -103,11 +103,11 @@ class AssistantService:
 
         recommended_actions = []
         if de.get("anomalies"):
-            recommended_actions.append("Review recent anomalies")
+            recommended_actions.append("Take a look at your unusual spending items")
         if ef.get("months_covered", 0) < 6:
-            recommended_actions.append(f"Build emergency fund to 6 months (currently {round(ef.get('months_covered', 0), 1)})")
+            recommended_actions.append(f"Try to save more for emergencies. You currently have {round(ef.get('months_covered', 0), 1)} months of safety cover.")
         if (savings / max(1.0, income)) < 0.2:
-            recommended_actions.append("Target a 20% savings rate by reducing discretionary spend")
+            recommended_actions.append("Try to save about 20% of your income by spending a bit less on things you don't need every day.")
 
         return {
             "financial_health_score": de.get("health_score") or 50,

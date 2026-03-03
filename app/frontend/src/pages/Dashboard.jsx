@@ -16,12 +16,11 @@ export const Dashboard = ({ user }) => {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const userId = user?.id || 1;
                 const [health, forecast, analytics, anomaliesData] = await Promise.all([
-                    api.getHealthScore(userId),
-                    api.getForecast(userId),
-                    api.getAnalytics(userId),
-                    api.getAnomalies(userId)
+                    api.getHealthScore(),
+                    api.getForecast(),
+                    api.getAnalytics(),
+                    api.getAnomalies()
                 ]);
                 setData({
                     health,
@@ -57,49 +56,85 @@ export const Dashboard = ({ user }) => {
                         Welcome back, <span style={{ color: 'white', fontWeight: 600 }}>{user?.email?.split('@')[0] || 'Member'}</span>.
                         System is <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Active & Optimizing</span>.
                     </p>
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '12px' }}>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '6px' }}>
+                            Income: <span style={{ color: 'white', fontWeight: 600 }}>${(user?.monthly_income || 0).toLocaleString()}</span>
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '6px' }}>
+                            Risk: <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{user?.risk_tolerance || 'Moderate'}</span>
+                        </div>
+                    </div>
                 </div>
-                <div style={{
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    color: '#10b981',
-                    padding: '10px 20px',
-                    background: 'rgba(16, 185, 129, 0.1)',
-                    borderRadius: '30px',
-                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                }}>
-                    <span style={{ width: 8, height: 8, background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }}></span>
-                    Oracle Neural Link: Secure
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                    {data.health?.metrics?.budget_usage_pct > 100 && (
+                        <div style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            color: '#ef4444',
+                            padding: '6px 12px',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            animation: 'pulse 2s infinite'
+                        }}>
+                            ⚠️ WARNING: EXPENSES EXCEED INCOME
+                        </div>
+                    )}
+                    <div style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        color: '#10b981',
+                        padding: '10px 20px',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        borderRadius: '30px',
+                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}>
+                        <span style={{ width: 8, height: 8, background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }}></span>
+                        Oracle Neural Link: Secure
+                    </div>
                 </div>
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
                 <MetricCard
-                    label="Health Score"
-                    value={data.health?.health_score || '78'}
+                    label={
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            Health Score
+                            <span title="This score is based on how much you save, how well you follow your budget, and how stable your spending is." style={{ cursor: 'help', opacity: 0.6 }}><Zap size={14} /></span>
+                        </span>
+                    }
+                    value={data.health?.score || '78'}
+                    subtitle="A simple score that shows how well you're managing your money."
                     trend={+5}
                     icon={Zap}
-                    color="#f59e0b"
+                    color={
+                        (data.health?.score || 78) >= 80 ? "#10b981" :
+                            (data.health?.score || 78) >= 60 ? "#6366f1" :
+                                (data.health?.score || 78) >= 40 ? "#f59e0b" : "#ef4444"
+                    }
                 />
                 <MetricCard
-                    label="Monthly Forecast"
-                    value={`$${(data.forecast?.monthly_forecast || 2450).toLocaleString()}`}
+                    label="Monthly Estimate"
+                    value={`$${(data.forecast?.forecast_analysis?.monthly_forecast || 2450).toLocaleString()}`}
+                    subtitle="What you may spend next month based on recent habits."
                     trend={-2.4}
                     icon={TrendingUp}
                     color="#6366f1"
                 />
                 <MetricCard
                     label="Savings Rate"
-                    value={`${(data.health?.metrics?.savings_ratio * 100 || 15.5).toFixed(1)}%`}
+                    value={`${(data.health?.metrics?.savings_rate_pct || 15.5)}%`}
                     trend={0.8}
                     icon={DollarSign}
                     color="#10b981"
                 />
                 <MetricCard
-                    label="Active Anomalies"
+                    label="Unusual Spending"
                     value={(data.anomalies?.length || 0).toString()}
+                    subtitle={(data.anomalies || []).length === 0 ? "Everything looks normal." : "Check high-cost items."}
                     icon={ShieldAlert}
                     color="#ef4444"
                 />
@@ -107,7 +142,7 @@ export const Dashboard = ({ user }) => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <Card title="Predictive Spending Flow" subtitle="Deep-learning actual vs. projected trend" icon={BarChart3}>
+                    <Card title="Monthly Estimate" subtitle="What you may spend next month." icon={BarChart3}>
                         <div style={{ height: '350px', marginTop: '24px' }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={forecastData}>
@@ -142,11 +177,11 @@ export const Dashboard = ({ user }) => {
                         </div>
                     </Card>
 
-                    <Card title="Intelligence Guard" subtitle="Real-time anomaly identification" icon={ShieldAlert}>
+                    <Card title="Unusual Spending" subtitle="We check if any recent spending is higher than normal." icon={ShieldAlert}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
                             {(data.anomalies || []).length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '40px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed var(--glass-border)' }}>
-                                    <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>The Oracle has detected zero irregularities in your current cycle.</p>
+                                    <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>No unusual spending found. Everything looks normal.</p>
                                 </div>
                             ) : data.anomalies.map((anom, i) => (
                                 <div key={i} style={{
@@ -162,8 +197,8 @@ export const Dashboard = ({ user }) => {
                                     <div>
                                         <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fca5a5', marginBottom: '4px' }}>{anom.title}</div>
                                         <div style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ padding: '2px 8px', background: 'rgba(239, 68, 68, 0.2)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>RISK: {(anom.anomaly_probability * 100).toFixed(0)}%</span>
-                                            {anom.reason?.split('.')[0]}
+                                            <span style={{ padding: '2px 8px', background: 'rgba(239, 68, 68, 0.2)', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>CHECK NEEDED</span>
+                                            This is higher than your usual spending.
                                         </div>
                                     </div>
                                     <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>${anom.amount}</div>
@@ -174,7 +209,7 @@ export const Dashboard = ({ user }) => {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <Card title="Stress Prediction" subtitle="AI Early Warning & Simulation" icon={Zap}>
+                    <Card title="Future Warning" subtitle="We check if your spending might cause a shortage." icon={Zap}>
                         <div style={{ marginTop: '20px' }}>
                             <div style={{
                                 padding: '20px',
@@ -200,23 +235,24 @@ export const Dashboard = ({ user }) => {
                                         padding: '4px 10px',
                                         borderRadius: '20px'
                                     }}>
-                                        {data.health?.status?.toUpperCase() || 'STABLE'}
+                                        {data.health?.status === 'Critical' ? 'Review Needed' :
+                                            data.health?.status === 'Vulnerable' ? 'Needs Attention' :
+                                                data.health?.status === 'Stable' ? 'Good' : 'Excellent'}
                                     </span>
                                 </div>
                                 <h4 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'white', marginBottom: '8px' }}>
-                                    {data.health?.status === 'Critical' ? 'Imminent Stress' : 'Neural Stability'}
+                                    {data.health?.status === 'Critical' ? 'Attention Needed' : 'Your Balance is Safe'}
                                 </h4>
                                 <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: '1.6' }}>
-                                    Oracle Confidence: <span style={{ color: 'white', fontWeight: 600 }}>94.2%</span>.
                                     {data.health?.status === 'Critical'
-                                        ? ' Budget trajectory requires autonomous rebalancing to prevent liquidity gap.'
-                                        : ' Financial metadata indicates a stable and high-velocity savings path.'}
+                                        ? 'Your spending needs attention. Small changes can improve this quickly.'
+                                        : 'You’re on track for this month 👍'}
                                 </p>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Strategic Directives</p>
-                                {(data.health?.recommendations || ['Maintain current optimization parameters']).slice(0, 3).map((rec, i) => (
+                                <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Smart Advice</p>
+                                {(data.health?.recommendations || ['Keep up the good work!']).slice(0, 3).map((rec, i) => (
                                     <div key={i} style={{
                                         display: 'flex',
                                         gap: '12px',
@@ -235,17 +271,26 @@ export const Dashboard = ({ user }) => {
                         </div>
                     </Card>
 
-                    <Card title="Engine Calibration" subtitle="Live precision metrics">
+                    <Card title="Quick Metrics" subtitle="Real-time checks">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '24px' }}>
                             {[
-                                { label: 'Savings Velocity', val: data.health?.metrics?.savings_rate_pct || 15, color: '#10b981' },
-                                { label: 'Budget Efficiency', val: 100 - (data.health?.metrics?.budget_utilization_pct || 85), color: '#6366f1' },
-                                { label: 'Model Confidence', val: 92, color: '#f59e0b' }
+                                {
+                                    label: (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            Spending Stability
+                                            <span title="Shows how consistent your spending is month to month." style={{ cursor: 'help', opacity: 0.6 }}><Zap size={12} /></span>
+                                        </span>
+                                    ),
+                                    val: data.health?.metrics?.stability_score || 15,
+                                    color: '#10b981'
+                                },
+                                { label: 'Budget Used', val: data.health?.metrics?.budget_usage_pct || 85, color: '#6366f1' },
+                                { label: 'AI Confidence', val: 92, color: '#f59e0b' }
                             ].map((item) => (
                                 <div key={item.label}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                                         <span style={{ fontSize: '0.9rem', color: 'var(--muted)', fontWeight: 500 }}>{item.label}</span>
-                                        <span style={{ fontSize: '0.9rem', fontWeight: 800 }}>{item.val.toFixed(1)}%</span>
+                                        <span style={{ fontSize: '0.9rem', fontWeight: 800 }}>{item.val.toFixed(0)}%</span>
                                     </div>
                                     <div style={{ height: '8px', background: 'rgba(255,255,255,0.04)', borderRadius: '4px', overflow: 'hidden' }}>
                                         <div style={{

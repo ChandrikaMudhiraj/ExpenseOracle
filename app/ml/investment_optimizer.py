@@ -3,8 +3,8 @@ import numpy as np
 
 class InvestmentOptimizer:
     """
-    Advanced Investment Optimizer using Monte Carlo simulations.
-    Calculates risk-adjusted returns and Sharpe ratios for professional-grade advice.
+    Advanced Investment Optimizer using historical market patterns.
+    Calculates risk-adjusted returns and growth scores for professional-grade advice.
     """
 
     PORTFOLIOS = {
@@ -14,9 +14,9 @@ class InvestmentOptimizer:
     }
 
     @classmethod
-    def simulate_monte_carlo(cls, principal: float, years: int = 1, iterations: int = 1000) -> Dict:
+    def simulate_future_growth(cls, principal: float, years: int = 1, iterations: int = 1000) -> Dict:
         """
-        Runs a Monte Carlo simulation for each portfolio to project potential outcomes.
+        Runs a simulation for each portfolio to project potential outcomes based on market patterns.
         """
         results = {}
         for name, data in cls.PORTFOLIOS.items():
@@ -35,13 +35,13 @@ class InvestmentOptimizer:
             results[name] = {
                 "composition": data["composition"],
                 "expected_return": f"{int(mu*100)}%",
-                "sharpe_ratio": round(float(sharpe_ratio), 2),
+                "risk_reward_score": round(float(sharpe_ratio), 2),
                 "risk_band": "Low Risk" if sigma < 0.05 else "Moderate Risk" if sigma < 0.15 else "High Risk",
                 "projection": {
                     "mean": round(float(np.mean(final_values)), 2),
-                    "p10_worst_case": round(float(np.percentile(final_values, 10)), 2),
-                    "p90_best_case": round(float(np.percentile(final_values, 90)), 2),
-                    "volatility": f"{int(sigma*100)}%"
+                    "lowest_outcome": round(float(np.percentile(final_values, 10)), 2),
+                    "best_outcome": round(float(np.percentile(final_values, 90)), 2),
+                    "risk_level": f"{int(sigma*100)}%"
                 }
             }
         return results
@@ -60,6 +60,6 @@ class InvestmentOptimizer:
         return {
             "surplus_available": round(surplus, 2),
             "suggested_portfolio": risk_tolerance,
-            "sharpe_ratio": round(sharpe, 2),
+            "risk_reward_score": round(sharpe, 2),
             "action": f"Automatically allocate ${round(surplus, 2)} into your {risk_tolerance} portfolio for a target {int(portfolio['mu']*100)}% return."
         }

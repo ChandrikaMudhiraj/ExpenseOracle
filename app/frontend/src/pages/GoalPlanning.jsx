@@ -103,8 +103,8 @@ export const GoalPlanning = ({ user }) => {
                         <Target size={24} color="white" />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Goal Planning Engine</h1>
-                        <p style={{ color: 'var(--muted)' }}>Autonomous trajectory mapping and savings discipline</p>
+                        <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Saving for Your Goals</h1>
+                        <p style={{ color: 'var(--muted)' }}>Plan your savings to reach your big dreams</p>
                     </div>
                 </div>
             </header>
@@ -151,7 +151,7 @@ export const GoalPlanning = ({ user }) => {
                                 </select>
                             </div>
                             <button type="submit" className="btn-primary" disabled={saving}>
-                                {saving ? 'Syncing...' : 'Update Trajectory'}
+                                {saving ? 'Saving...' : 'Save My Changes'}
                             </button>
                         </form>
                     </Card>
@@ -189,7 +189,7 @@ export const GoalPlanning = ({ user }) => {
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '6px' }}>Target Amount ($)</label>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '6px' }}>Total Amount Needed ($)</label>
                                     <input
                                         type="number"
                                         placeholder="10000"
@@ -200,7 +200,7 @@ export const GoalPlanning = ({ user }) => {
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '6px' }}>Deadline (Optional)</label>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '6px' }}>Target Date (Optional)</label>
                                     <input
                                         type="date"
                                         value={newGoal.deadline}
@@ -209,7 +209,7 @@ export const GoalPlanning = ({ user }) => {
                                     />
                                 </div>
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
-                                    <button type="submit" className="btn-primary" style={{ flex: 1 }}>Deploy Goal</button>
+                                    <button type="submit" className="btn-primary" style={{ flex: 1 }}>Save Goal</button>
                                     <button type="button" className="btn-ghost" onClick={() => setShowAddGoal(false)}>Cancel</button>
                                 </div>
                             </form>
@@ -222,7 +222,7 @@ export const GoalPlanning = ({ user }) => {
                         ) : goals.length === 0 ? (
                             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed var(--glass-border)' }}>
                                 <Target size={40} color="rgba(255,255,255,0.1)" style={{ margin: '0 auto 16px' }} />
-                                <p style={{ color: 'var(--muted)' }}>No active goals. Start your 5-year wealth trajectory today.</p>
+                                <p style={{ color: 'var(--muted)' }}>No active goals yet. What are you saving for today?</p>
                             </div>
                         ) : goals.map(goal => {
                             const { score, message } = calculateFeasibility(goal);
@@ -242,10 +242,11 @@ export const GoalPlanning = ({ user }) => {
 
                                         <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '16px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)' }}>AI FEASIBILITY</span>
-                                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: score > 70 ? '#10b981' : '#f59e0b' }}>{score}%</span>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)' }}>CAN I ACHIEVE THIS?</span>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: score > 70 ? '#10b981' : '#f59e0b' }}>{score}% Probability</span>
                                             </div>
                                             <p style={{ fontSize: '0.85rem', color: 'white' }}>{message}</p>
+                                            <p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '4px' }}>We calculate if your current savings can help you reach this goal on time.</p>
                                         </div>
 
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
