@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Zap, TrendingUp, ShieldAlert, BarChart3 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { MetricCard, Card } from '../components/Layout';
 import { api } from '../services/api';
 
@@ -14,16 +14,18 @@ export const Dashboard = ({ user }) => {
     });
 
     const [goals, setGoals] = useState([]);
+    const [expenses, setExpenses] = useState([]);
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [health, forecast, analytics, anomaliesData, goalsData] = await Promise.all([
+                const [health, forecast, analytics, anomaliesData, goalsData, expensesData] = await Promise.all([
                     api.getHealthScore(),
                     api.getForecast(),
                     api.getAnalytics(),
                     api.getAnomalies(),
-                    api.getGoals()
+                    api.getGoals(),
+                    api.getExpenses()
                 ]);
                 setData({
                     health,
@@ -33,6 +35,7 @@ export const Dashboard = ({ user }) => {
                     loading: false
                 });
                 setGoals(goalsData || []);
+                setExpenses(expensesData || []);
             } catch (e) {
                 console.error("Failed to load dashboard data", e);
                 setData(d => ({ ...d, loading: false }));
@@ -50,11 +53,32 @@ export const Dashboard = ({ user }) => {
     const mainGoal = goals.length > 0 ? goals[0] : null;
     const goalPercent = mainGoal ? Math.min(100, (mainGoal.current_saved / mainGoal.target_amount) * 100) : 0;
 
-    const forecastData = (data.analytics?.series?.forecast_vs_actual || []).map((item) => ({
-        name: String(item.month || 'Unknown'),
-        actual: typeof item.actual === 'number' ? item.actual : 0,
-        forecast: typeof item.forecast === 'number' ? item.forecast : 0
+    // Calculate spending breakdown
+    const categoryData = {};
+    expenses.forEach(exp => {
+        categoryData[exp.category] = (categoryData[exp.category] || 0) + exp.amount;
+    });
+    const pieData = Object.entries(categoryData).map(([category, amount]) => ({
+        name: category,
+        value: amount
     }));
+    const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff'];
+
+    // Calculate notifications
+    const notifications = [];
+    if (totalExpenses > monthlyIncome * 0.9) {
+        notifications.push({
+            type: 'warning',
+            message: `You are close to exceeding your monthly income. Current spending: $${totalExpenses.toFixed(2)}`
+        });
+    }
+    if (mainGoal && goalPercent >= 80) {
+        notifications.push({
+            type: 'success',
+            message: `You are ${goalPercent.toFixed(0)}% close to completing your goal "${mainGoal.name}"!`
+        });
+    }
+    // Add more notifications as needed
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -126,7 +150,7 @@ export const Dashboard = ({ user }) => {
                 </div>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }} className="grid-responsive">
                 <MetricCard
                     label={
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -186,39 +210,45 @@ export const Dashboard = ({ user }) => {
                 )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
+            {notifications.length > 0 && (
+                <Card title="Smart Notifications" icon={Zap}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {notifications.map((notif, index) => (
+                            <div key={index} style={{
+                                padding: '12px 16px',
+                                background: notif.type === 'warning' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                border: `1px solid ${notif.type === 'warning' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+                                borderRadius: '8px',
+                                color: notif.type === 'warning' ? '#fca5a5' : '#a7f3d0'
+                            }}>
+                                {notif.message}
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }} className="grid-responsive">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <Card title="Monthly Estimate" subtitle="What you may spend next month." icon={BarChart3}>
-                        <div style={{ height: '350px', marginTop: '24px' }}>
+                    <Card title="Spending Breakdown" subtitle="Your spending by category" icon={BarChart3}>
+                        <div style={{ height: '300px', marginTop: '24px' }}>
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={forecastData}>
-                                    <defs>
-                                        <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                                    <XAxis dataKey="name" stroke="var(--muted)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                                    <YAxis stroke="var(--muted)" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
-                                    <Tooltip
-                                        contentStyle={{
-                                            background: 'rgba(15, 15, 20, 0.95)',
-                                            border: '1px solid var(--glass-border)',
-                                            borderRadius: '12px',
-                                            backdropFilter: 'blur(10px)',
-                                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-                                        }}
-                                        itemStyle={{ color: 'white', fontSize: '0.9rem' }}
-                                        formatter={(value) => [`$${Number(value).toLocaleString()}`, '']}
-                                    />
-                                    <Area type="monotone" dataKey="forecast" name="Predicted" stroke="var(--primary)" fillOpacity={1} fill="url(#colorForecast)" strokeWidth={3} />
-                                    <Area type="monotone" dataKey="actual" name="Actual" stroke="#10b981" fillOpacity={1} fill="url(#colorActual)" strokeWidth={2} strokeDasharray="6 4" />
-                                </AreaChart>
+                                <PieChart>
+                                    <Pie
+                                        data={pieData}
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={80}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    >
+                                        {pieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                                </PieChart>
                             </ResponsiveContainer>
                         </div>
                     </Card>

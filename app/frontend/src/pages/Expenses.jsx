@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, DollarSign, Calendar, Tag } from 'lucide-react';
+import { Plus, Search, Filter, DollarSign, Calendar, Tag, Download } from 'lucide-react';
 import { Card } from '../components/Layout';
 import { api } from '../services/api';
 
@@ -69,6 +69,24 @@ export const Expenses = () => {
         }
     };
 
+    const handleDownloadCSV = async () => {
+        try {
+            const csvData = await api.downloadExpensesCSV();
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'expenses.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error("Failed to download CSV", e);
+            alert("Failed to download CSV");
+        }
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -76,9 +94,14 @@ export const Expenses = () => {
                     <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Your Spending</h1>
                     <p style={{ color: 'var(--muted)' }}>Keep track of where your money goes</p>
                 </div>
-                <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => { setEditingExpense(null); setNewExpense({ title: '', amount: '', category: 'General', created_at: '' }); setShowAdd(true); }}>
-                    <Plus size={18} /> Add New Expense
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={handleDownloadCSV}>
+                        <Download size={18} /> Export CSV
+                    </button>
+                    <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => { setEditingExpense(null); setNewExpense({ title: '', amount: '', category: 'General', created_at: '' }); setShowAdd(true); }}>
+                        <Plus size={18} /> Add New Expense
+                    </button>
+                </div>
             </header>
 
             {showAdd && (

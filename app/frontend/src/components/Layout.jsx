@@ -1,6 +1,7 @@
 import React from 'react';
-import { Home, Activity, Target, Bot, Cpu, Settings, LogOut, Calculator, ShieldCheck, Briefcase } from 'lucide-react';
+import { Home, Activity, Target, Bot, Cpu, Settings, LogOut, Calculator, ShieldCheck, Briefcase, BarChart3 } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { NotificationBar } from './NotificationBar';
 
 export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
   const navItems = [
@@ -8,13 +9,14 @@ export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
     { id: 'expenses', label: 'Expenses', icon: Activity },
     { id: 'budgets', label: 'Budgets', icon: Target },
     { id: 'goals', label: 'Goal Planning', icon: Briefcase },
+    { id: 'summary', label: 'Monthly Summary', icon: BarChart3 },
     { id: 'assistant', label: 'AI Assistant', icon: Bot },
     { id: 'simulator', label: 'Simulator', icon: Calculator },
     { id: 'autonomous', label: 'Autonomy', icon: Cpu },
   ];
 
   return (
-    <div className="glass-panel" style={{
+    <div className="sidebar" style={{
       width: 'var(--sidebar-width)',
       height: 'calc(100vh - 40px)',
       margin: '20px',

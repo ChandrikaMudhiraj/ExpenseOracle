@@ -11,7 +11,7 @@ from app.schemas.user import UserCreate
 import bcrypt
 
 from app.api.v1 import (
-    auth, expenses, budgets, ml, goals, health, dashboard, assistant
+    auth, expenses, budgets, ml, goals, health, dashboard, assistant, reports
 )
 
 from app.core.logging_config import configure_logging
@@ -51,6 +51,7 @@ app.include_router(expenses.router)
 app.include_router(budgets.router)
 app.include_router(ml.router)
 app.include_router(goals.router)
+app.include_router(reports.router)
 
 if health and hasattr(health, "router"):
     app.include_router(health.router)

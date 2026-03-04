@@ -165,5 +165,40 @@ export const api = {
         return await request(`${BASE_URL}/goals/${goalId}/add-savings?amount=${amount}`, {
             method: 'POST'
         });
+    },
+
+    // Reports
+    downloadExpensesCSV: async () => {
+        const token = localStorage.getItem('oracle_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`${BASE_URL}/reports/expenses/csv`, { headers });
+        if (!response.ok) throw new Error('Failed to download CSV');
+        const data = await response.json();
+        return data.csv;
+    },
+    downloadMonthlySummaryPDF: async (year, month) => {
+        const token = localStorage.getItem('oracle_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`${BASE_URL}/reports/monthly-summary/pdf?year=${year}&month=${month}`, { headers });
+        if (!response.ok) throw new Error('Failed to download PDF');
+        const data = await response.json();
+        return data.pdf;
+    },
+    downloadGoalProgressPDF: async () => {
+        const token = localStorage.getItem('oracle_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`${BASE_URL}/reports/goal-progress/pdf`, { headers });
+        if (!response.ok) throw new Error('Failed to download PDF');
+        const data = await response.json();
+        return data.pdf;
     }
 };

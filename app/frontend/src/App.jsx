@@ -9,6 +9,7 @@ import { Auth } from './pages/Auth';
 import { InvestmentSimulator } from './pages/InvestmentSimulator';
 import { AutonomousActions } from './pages/AutonomousActions';
 import { Profile } from './pages/Profile';
+import { MonthlySummary } from './pages/MonthlySummary';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
@@ -85,7 +86,7 @@ export default function App() {
         marginLeft: 'calc(var(--sidebar-width) + 40px)',
         padding: '40px 40px 40px 0',
         maxWidth: '1200px'
-      }}>
+      }} className="main-content">
         <ErrorBoundary>
           {activeTab === 'dashboard' && <Dashboard user={user} />}
           {activeTab === 'assistant' && <Assistant user={user} />}
@@ -94,11 +95,12 @@ export default function App() {
           {activeTab === 'expenses' && <Expenses user={user} />}
           {activeTab === 'budgets' && <Budgets user={user} />}
           {activeTab === 'goals' && <GoalPlanning user={user} />}
+          {activeTab === 'summary' && <MonthlySummary user={user} />}
           {activeTab === 'simulator' && <InvestmentSimulator user={user} />}
           {activeTab === 'autonomous' && <AutonomousActions user={user} />}
           {activeTab === 'profile' && <Profile user={user} onUpdateUser={handleUserUpdate} />}
 
-          {['dashboard', 'assistant', 'expenses', 'budgets', 'goals', 'simulator', 'autonomous', 'analytics', 'anomalies', 'profile'].indexOf(activeTab) === -1 && (
+          {['dashboard', 'assistant', 'expenses', 'budgets', 'goals', 'summary', 'simulator', 'autonomous', 'analytics', 'anomalies', 'profile'].indexOf(activeTab) === -1 && (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>
               <h2 style={{ marginBottom: '10px' }}>Intelligence Module Coming Soon</h2>
               <p>We are currently calibrating the {activeTab} autonomous engine.</p>

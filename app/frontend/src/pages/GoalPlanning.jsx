@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, TrendingUp, Sparkles, DollarSign, Wallet, Calendar, Plus, Trash2 } from 'lucide-react';
+import { Target, TrendingUp, Sparkles, DollarSign, Wallet, Calendar, Plus, Trash2, Download } from 'lucide-react';
 import { Card } from '../components/Layout';
 import { api } from '../services/api';
 
@@ -101,9 +101,27 @@ export const GoalPlanning = ({ user }) => {
         return { score: Math.round(score), message, monthsNeeded, monthsLeft };
     };
 
+    const handleDownloadGoalReport = async () => {
+        try {
+            const pdfData = await api.downloadGoalProgressPDF();
+            const blob = new Blob([pdfData], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'goal_progress_report.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error("Failed to download PDF", e);
+            alert("Failed to download Goal Progress Report");
+        }
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <header>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ padding: '8px', background: 'var(--primary)', borderRadius: '8px' }}>
                         <Target size={24} color="white" />
@@ -113,6 +131,9 @@ export const GoalPlanning = ({ user }) => {
                         <p style={{ color: 'var(--muted)' }}>Plan your savings to reach your big dreams</p>
                     </div>
                 </div>
+                <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={handleDownloadGoalReport}>
+                    <Download size={18} /> Download Report
+                </button>
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
