@@ -34,21 +34,36 @@ export const MonthlySummary = ({ user }) => {
 
             const goalContributions = goals.reduce((sum, g) => sum + g.current_saved, 0);
 
-            // Health trend - last 6 months
+            // Health trend - only months with data, up to 6 months back
             const healthTrend = [];
-            for (let i = 5; i >= 0; i--) {
-                const date = new Date(selectedYear, selectedMonth - 1 - i, 1);
-                const monthExp = expenses.filter(e => {
-                    const edate = new Date(e.created_at);
-                    return edate.getMonth() === date.getMonth() && edate.getFullYear() === date.getFullYear();
-                }).reduce((sum, e) => sum + e.amount, 0);
+            const monthsWithData = {};
+            
+            // Group expenses by month
+            expenses.forEach(e => {
+                const edate = new Date(e.created_at);
+                const monthKey = `${edate.getFullYear()}-${String(edate.getMonth() + 1).padStart(2, '0')}`;
+                if (!monthsWithData[monthKey]) {
+                    monthsWithData[monthKey] = [];
+                }
+                monthsWithData[monthKey].push(e);
+            });
+            
+            // Get unique months with data, sorted chronologically
+            const availableMonths = Object.keys(monthsWithData).sort();
+            const recentMonths = availableMonths.slice(-6); // Get last 6 months with data
+            
+            recentMonths.forEach(monthKey => {
+                const [year, month] = monthKey.split('-');
+                const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+                const monthExpenses = monthsWithData[monthKey];
+                const monthExp = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
                 const monthInc = totalIncome;
                 const savingsRate = monthInc > 0 ? ((monthInc - monthExp) / monthInc) * 100 : 0;
                 healthTrend.push({
-                    month: date.toLocaleString('default', { month: 'short' }),
+                    month: date.toLocaleString('default', { month: 'short', year: '2-digit' }),
                     savingsRate: Math.max(0, savingsRate)
                 });
-            }
+            })
 
             setSummary({
                 totalIncome,

@@ -125,7 +125,7 @@ export const NotificationBar = ({ notifications = [] }) => {
                     style={{
                         position: 'absolute',
                         top: '45px',
-                        right: '-10px',
+                        right: '-80px',
                         background: 'var(--background)',
                         border: '1px solid var(--glass-border)',
                         borderRadius: '12px',

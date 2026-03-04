@@ -3,7 +3,7 @@ import { Home, Activity, Target, Bot, Cpu, Settings, LogOut, Calculator, ShieldC
 import logo from '../assets/logo.png';
 import { NotificationBar } from './NotificationBar';
 
-export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
+export const Sidebar = ({ activeTab, setTab, onLogout, user, notifications = [] }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'expenses', label: 'Expenses', icon: Activity },
@@ -25,9 +25,12 @@ export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
       flexDirection: 'column',
       padding: '24px 12px'
     }}>
-      <div style={{ padding: '0 12px 32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <img src={logo} alt="ExpenseOracle Logo" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} />
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>ExpenseOracle</h2>
+      <div style={{ padding: '0 12px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src={logo} alt="ExpenseOracle Logo" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>ExpenseOracle</h2>
+        </div>
+        <NotificationBar notifications={notifications} />
       </div>
 
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>

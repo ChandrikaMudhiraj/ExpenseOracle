@@ -16,6 +16,7 @@ export default function App() {
   const [activeTab, setTab] = useState('dashboard');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('oracle_user');
@@ -71,6 +72,10 @@ export default function App() {
     setUser(newUser);
   };
 
+  const handleNotifications = (newNotifications) => {
+    setNotifications(newNotifications);
+  };
+
   if (loading) return <div style={{ background: 'var(--background)', minHeight: '100vh', color: 'white' }}></div>;
 
   if (!user) {
@@ -79,7 +84,7 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar activeTab={activeTab} setTab={setTab} onLogout={handleLogout} user={user} />
+      <Sidebar activeTab={activeTab} setTab={setTab} onLogout={handleLogout} user={user} notifications={notifications} />
 
       <main style={{
         flex: 1,
@@ -88,7 +93,7 @@ export default function App() {
         maxWidth: '1200px'
       }} className="main-content">
         <ErrorBoundary>
-          {activeTab === 'dashboard' && <Dashboard user={user} />}
+          {activeTab === 'dashboard' && <Dashboard user={user} onNotifications={handleNotifications} />}
           {activeTab === 'assistant' && <Assistant user={user} />}
           {activeTab === 'analytics' && <Dashboard user={user} />}
           {activeTab === 'anomalies' && <Dashboard user={user} />}
