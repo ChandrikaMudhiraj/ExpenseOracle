@@ -11,6 +11,8 @@ export const GoalPlanning = ({ user }) => {
         monthly_savings: user?.monthly_savings || 1000,
         risk_tolerance: user?.risk_tolerance || 'Moderate'
     });
+    const [showAddGoal, setShowAddGoal] = useState(false);
+    const [newGoal, setNewGoal] = useState({ name: '', target_amount: '', deadline: '' });
     const [showAddSavings, setShowAddSavings] = useState(false);
     const [selectedGoal, setSelectedGoal] = useState(null);
     const [savingsAmount, setSavingsAmount] = useState('');
@@ -82,7 +84,7 @@ export const GoalPlanning = ({ user }) => {
         const remaining = goal.target_amount - goal.current_saved;
         const monthsNeeded = remaining / Math.max(1, monthlySavings);
 
-        if (!goal.deadline) return { score: 90, message: `Estimated time: ${Math.ceil(monthsNeeded)} months` };
+        if (!goal.deadline) return { score: 90, message: `Estimated time: ${Math.ceil(monthsNeeded)} months`, monthsNeeded, monthsLeft: Infinity };
 
         const deadline = new Date(goal.deadline);
         const now = new Date();
@@ -96,7 +98,7 @@ export const GoalPlanning = ({ user }) => {
             message = "At your current savings rate, this goal may be delayed. Consider increasing monthly savings.";
         }
 
-        return { score: Math.round(score), message };
+        return { score: Math.round(score), message, monthsNeeded, monthsLeft };
     };
 
     return (
@@ -220,7 +222,7 @@ export const GoalPlanning = ({ user }) => {
                                 <p style={{ color: 'var(--muted)' }}>No active goals yet. What are you saving for today?</p>
                             </div>
                         ) : goals.map(goal => {
-                            const { score, message } = calculateFeasibility(goal);
+                            const { score, message, monthsNeeded, monthsLeft } = calculateFeasibility(goal);
                             const percent = Math.min(100, (goal.current_saved / goal.target_amount) * 100);
                             const progressColor = percent < 40 ? '#f59e0b' : percent < 80 ? '#6366f1' : '#10b981';
 
