@@ -58,6 +58,8 @@ def update_profile(
     db: Session = Depends(get_db)
 ):
     from app.repository.user_repository import update_user_profile
+    from app.core.cache_manager import CacheManager
+    
     user = update_user_profile(
         db, 
         current_user.id, 
@@ -68,4 +70,9 @@ def update_profile(
     )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+        
+    # Clear intelligence cache since income/savings changed
+    CacheManager.delete(f"health_score:{current_user.id}")
+    CacheManager.delete(f"forecast:{current_user.id}")
+    
     return user

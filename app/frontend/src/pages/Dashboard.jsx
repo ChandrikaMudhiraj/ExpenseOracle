@@ -77,7 +77,7 @@ export const Dashboard = ({ user }) => {
                             border: '1px solid rgba(239, 68, 68, 0.3)',
                             animation: 'pulse 2s infinite'
                         }}>
-                            ⚠️ WARNING: EXPENSES EXCEED INCOME
+                            ⚠️ WARNING: BUDGET EXCEEDED
                         </div>
                     )}
                     <div style={{
@@ -125,8 +125,9 @@ export const Dashboard = ({ user }) => {
                     color="#6366f1"
                 />
                 <MetricCard
-                    label="Savings Rate"
+                    label="Actual Savings"
                     value={`${(data.health?.metrics?.savings_rate_pct || 15.5)}%`}
+                    subtitle="Percentage of income saved after all expenses."
                     trend={0.8}
                     icon={DollarSign}
                     color="#10b981"

@@ -3,7 +3,7 @@ import { Target, TrendingUp, AlertTriangle } from 'lucide-react';
 import { Card } from '../components/Layout';
 import { api } from '../services/api';
 
-export const Budgets = () => {
+export const Budgets = ({ user }) => {
     const [budgets, setBudgets] = useState([]);
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,8 +18,8 @@ export const Budgets = () => {
                 api.getBudgets(),
                 api.getExpenses()
             ]);
-            setBudgets(b);
-            setExpenses(e);
+            setBudgets(b || []);
+            setExpenses(e || []);
         } catch (err) {
             console.error(err);
         } finally {
