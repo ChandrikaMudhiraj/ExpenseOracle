@@ -18,7 +18,7 @@ def export_expenses_csv(db: Session = Depends(get_db), current_user: User = Depe
     writer = csv.writer(output)
     writer.writerow(['Date', 'Amount', 'Category', 'Description'])
     for expense in expenses:
-        writer.writerow([expense.date, expense.amount, expense.category, expense.description])
+        writer.writerow([expense.created_at, expense.amount, expense.category, expense.title])
     output.seek(0)
     return {"csv": output.getvalue()}
 
@@ -31,7 +31,7 @@ def export_monthly_summary_pdf(
 ):
     # Calculate summary
     expenses = list_expenses(db, current_user.id)
-    monthly_expenses = [e for e in expenses if e.date.year == year and e.date.month == month]
+    monthly_expenses = [e for e in expenses if e.created_at.year == year and e.created_at.month == month]
     total_expenses = sum(e.amount for e in monthly_expenses)
     
     total_income = 0  # Placeholder
