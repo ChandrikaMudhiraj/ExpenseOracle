@@ -3,7 +3,7 @@
 
 FROM node:18-bullseye AS frontend
 WORKDIR /src
-COPY app/frontend/package.json app/frontend/vite.config.js app/frontend/index.html ./
+COPY app/frontend/package.json app/frontend/vite.config.mjs app/frontend/index.html ./
 COPY app/frontend/src ./src
 RUN npm install --legacy-peer-deps && npm run build
 
