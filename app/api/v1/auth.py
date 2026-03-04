@@ -42,7 +42,9 @@ def login(user_login: UserLogin, db: Session = Depends(get_db)):
                 "id": user.id,
                 "email": user.email,
                 "monthly_income": user.monthly_income,
-                "risk_tolerance": user.risk_tolerance
+                "monthly_savings": user.monthly_savings,
+                "risk_tolerance": user.risk_tolerance,
+                "savings_target_percent": user.savings_target_percent
             }
         }
     except ValueError as e:
@@ -61,7 +63,8 @@ def update_profile(
         current_user.id, 
         profile_data.monthly_income, 
         profile_data.monthly_savings, 
-        profile_data.risk_tolerance
+        profile_data.risk_tolerance,
+        profile_data.savings_target_percent
     )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
