@@ -3,7 +3,7 @@ import { Plus, Search, Filter, DollarSign, Calendar, Tag } from 'lucide-react';
 import { Card } from '../components/Layout';
 import { api } from '../services/api';
 
-export const Expenses = ({ user }) => {
+export const Expenses = () => {
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
@@ -12,7 +12,7 @@ export const Expenses = ({ user }) => {
 
     const fetchExpenses = async () => {
         try {
-            const data = await api.getExpenses(user?.id || 1);
+            const data = await api.getExpenses();
             setExpenses(data);
         } catch (e) {
             console.error("Failed to fetch expenses", e);
@@ -35,9 +35,9 @@ export const Expenses = ({ user }) => {
             if (!payload.created_at) delete payload.created_at;
 
             if (editingExpense) {
-                await api.updateExpense(user?.id || 1, editingExpense.id, payload);
+                await api.updateExpense(editingExpense.id, payload);
             } else {
-                await api.addExpense(user?.id || 1, payload);
+                await api.addExpense(payload);
             }
             setShowAdd(false);
             setEditingExpense(null);
@@ -62,7 +62,7 @@ export const Expenses = ({ user }) => {
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this expense?")) return;
         try {
-            await api.deleteExpense(user?.id || 1, id);
+            await api.deleteExpense(id);
             fetchExpenses();
         } catch (e) {
             console.error("Failed to delete expense", e);

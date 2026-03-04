@@ -13,9 +13,9 @@ class GoalService:
         return goal_repository.create_goal(db, goal, user_id)
 
     @staticmethod
-    def update_goal(db: Session, goal_id: int, goal_update: GoalUpdate):
-        return goal_repository.update_goal(db, goal_id, goal_update)
+    def update_goal(db: Session, goal_id: int, goal_update: GoalUpdate, user_id: int):
+        return goal_repository.update_goal(db, goal_id, goal_update, user_id)
 
     @staticmethod
-    def delete_goal(db: Session, goal_id: int):
-        return goal_repository.delete_goal(db, goal_id)
+    def delete_goal(db: Session, goal_id: int, user_id: int):
+        return goal_repository.delete_goal(db, goal_id, user_id)

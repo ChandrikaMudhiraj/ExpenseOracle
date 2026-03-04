@@ -18,8 +18,7 @@ export const GoalPlanning = ({ user }) => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const userId = user?.id || 1;
-            const data = await api.getGoals(userId);
+            const data = await api.getGoals();
             setGoals(data);
         } catch (err) {
             console.error(err);
@@ -43,7 +42,7 @@ export const GoalPlanning = ({ user }) => {
         e.preventDefault();
         setSaving(true);
         try {
-            await api.updateProfile(user?.id || 1, profile);
+            await api.updateProfile(profile);
             alert("Financial profile updated successfully!");
         } catch (err) {
             console.error(err);
@@ -55,7 +54,7 @@ export const GoalPlanning = ({ user }) => {
     const handleAddGoal = async (e) => {
         e.preventDefault();
         try {
-            await api.addGoal(user?.id || 1, {
+            await api.addGoal({
                 ...newGoal,
                 target_amount: parseFloat(newGoal.target_amount)
             });
@@ -110,58 +109,28 @@ export const GoalPlanning = ({ user }) => {
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
-                {/* Profile Configuration */}
+                {/* Strategy Insight */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                    <Card title="Financial Context" icon={Wallet}>
-                        <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '6px' }}>Monthly Salary ($)</label>
-                                <div style={{ position: 'relative' }}>
-                                    <DollarSign size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
-                                    <input
-                                        type="number"
-                                        value={profile.monthly_income}
-                                        onChange={e => setProfile({ ...profile, monthly_income: parseFloat(e.target.value) })}
-                                        style={{ width: '100%', padding: '10px 10px 10px 32px', background: 'var(--background)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '6px' }}>Monthly Savings Target ($)</label>
-                                <div style={{ position: 'relative' }}>
-                                    <TrendingUp size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
-                                    <input
-                                        type="number"
-                                        value={profile.monthly_savings}
-                                        onChange={e => setProfile({ ...profile, monthly_savings: parseFloat(e.target.value) })}
-                                        style={{ width: '100%', padding: '10px 10px 10px 32px', background: 'var(--background)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '6px' }}>Risk Tolerance</label>
-                                <select
-                                    value={profile.risk_tolerance}
-                                    onChange={e => setProfile({ ...profile, risk_tolerance: e.target.value })}
-                                    style={{ width: '100%', padding: '10px', background: 'var(--background)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: 'white' }}
-                                >
-                                    <option value="Conservative">Conservative (Stability)</option>
-                                    <option value="Moderate">Moderate (Growth + Risk)</option>
-                                    <option value="Aggressive">Aggressive (High Growth)</option>
-                                </select>
-                            </div>
-                            <button type="submit" className="btn-primary" disabled={saving}>
-                                {saving ? 'Saving...' : 'Save My Changes'}
-                            </button>
-                        </form>
-                    </Card>
-
                     <Card title="AI Strategy Insight" icon={Sparkles}>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--muted)', lineHeight: '1.5' }}>
-                            Based on your salary of <span style={{ color: 'white', fontWeight: 600 }}>${profile.monthly_income}</span>,
-                            maintaining a savings rate of <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{((profile.monthly_savings / profile.monthly_income) * 100).toFixed(1)}%</span>
-                            is considered {profile.monthly_savings / profile.monthly_income > 0.2 ? 'Excellent' : 'Stable'}.
-                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ padding: '16px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                                <p style={{ fontSize: '0.9rem', color: 'white', lineHeight: '1.6' }}>
+                                    Targeting <span style={{ color: 'var(--primary)', fontWeight: 800 }}>${(user?.monthly_savings || 1000).toLocaleString()}</span> monthly savings
+                                    from <span style={{ color: 'var(--primary)', fontWeight: 800 }}>${(user?.monthly_income || 5000).toLocaleString()}</span> income.
+                                </p>
+                            </div>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--muted)', lineHeight: '1.6' }}>
+                                Based on your primary profile, your savings rate is
+                                <span style={{ color: 'white', fontWeight: 600 }}> {(((user?.monthly_savings || 1000) / (user?.monthly_income || 5000)) * 100).toFixed(1)}%</span>.
+                                Oracle uses this to calculate goal feasibility.
+                            </p>
+                            <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', fontSize: '0.8rem', color: 'var(--muted)' }}>
+                                💡 Need to change your income?
+                                <button onClick={() => window.dispatchEvent(new CustomEvent('switchTab', { detail: 'profile' }))} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', padding: '0 4px', fontWeight: 700 }}>
+                                    Update Profile
+                                </button>
+                            </div>
+                        </div>
                     </Card>
                 </div>
 

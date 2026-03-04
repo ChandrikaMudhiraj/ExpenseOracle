@@ -3,7 +3,7 @@ import { Target, TrendingUp, AlertTriangle } from 'lucide-react';
 import { Card } from '../components/Layout';
 import { api } from '../services/api';
 
-export const Budgets = ({ user }) => {
+export const Budgets = () => {
     const [budgets, setBudgets] = useState([]);
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -14,10 +14,9 @@ export const Budgets = ({ user }) => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const userId = user?.id || 1;
             const [b, e] = await Promise.all([
-                api.getBudgets(userId),
-                api.getExpenses(userId)
+                api.getBudgets(),
+                api.getExpenses()
             ]);
             setBudgets(b);
             setExpenses(e);
@@ -40,9 +39,9 @@ export const Budgets = ({ user }) => {
                 limit_amount: parseFloat(newBudget.limit_amount)
             };
             if (editingBudget) {
-                await api.updateBudget(user?.id || 1, editingBudget.id, payload);
+                await api.updateBudget(editingBudget.id, payload);
             } else {
-                await api.addBudget(user?.id || 1, payload);
+                await api.addBudget(payload);
             }
             setShowAdd(false);
             setEditingBudget(null);
@@ -62,7 +61,7 @@ export const Budgets = ({ user }) => {
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this budget limit?")) return;
         try {
-            await api.deleteBudget(user?.id || 1, id);
+            await api.deleteBudget(id);
             fetchData();
         } catch (err) {
             console.error("Failed to delete budget", err);

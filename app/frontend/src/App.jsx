@@ -18,26 +18,56 @@ export default function App() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('oracle_user');
-    if (savedUser) {
+    const savedToken = localStorage.getItem('oracle_token');
+
+    // Emergency Check: If we merged JWT but user has old session without token, clear it.
+    if (savedUser && !savedToken) {
+      localStorage.removeItem('oracle_user');
+      setUser(null);
+    } else if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
         localStorage.removeItem('oracle_user');
+        localStorage.removeItem('oracle_token');
       }
     }
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    const handleSwitchTab = (e) => setTab(e.detail);
+    const handleAuthError = () => handleLogout();
+
+    window.addEventListener('switchTab', handleSwitchTab);
+    window.addEventListener('oracle_auth_error', handleAuthError);
+
+    return () => {
+      window.removeEventListener('switchTab', handleSwitchTab);
+      window.removeEventListener('oracle_auth_error', handleAuthError);
+    };
+  }, []);
+
   const handleAuthSuccess = (data) => {
     const userToStore = data.user || { id: 1, email: 'user@example.com' };
     localStorage.setItem('oracle_user', JSON.stringify(userToStore));
+    if (data.access_token) {
+      localStorage.setItem('oracle_token', data.access_token);
+    }
     setUser(userToStore);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('oracle_user');
+    localStorage.removeItem('oracle_token');
     setUser(null);
     setTab('dashboard');
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    const newUser = { ...user, ...updatedUser };
+    localStorage.setItem('oracle_user', JSON.stringify(newUser));
+    setUser(newUser);
   };
 
   if (loading) return <div style={{ background: 'var(--background)', minHeight: '100vh', color: 'white' }}></div>;
@@ -66,7 +96,7 @@ export default function App() {
           {activeTab === 'goals' && <GoalPlanning user={user} />}
           {activeTab === 'simulator' && <InvestmentSimulator user={user} />}
           {activeTab === 'autonomous' && <AutonomousActions user={user} />}
-          {activeTab === 'profile' && <Profile user={user} />}
+          {activeTab === 'profile' && <Profile user={user} onUpdateUser={handleUserUpdate} />}
 
           {['dashboard', 'assistant', 'expenses', 'budgets', 'goals', 'simulator', 'autonomous', 'analytics', 'anomalies', 'profile'].indexOf(activeTab) === -1 && (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>

@@ -10,7 +10,7 @@ export const AutonomousActions = ({ user }) => {
 
     const fetchActions = async () => {
         try {
-            const data = await api.getAutonomousActions(user?.id || 1);
+            const data = await api.getAutonomousActions();
             setActions(data.autonomous_actions || []);
         } catch (e) {
             console.error(e);

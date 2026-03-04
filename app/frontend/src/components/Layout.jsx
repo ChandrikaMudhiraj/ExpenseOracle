@@ -1,5 +1,7 @@
 import React from 'react';
 import { Home, Activity, Target, Bot, Cpu, Settings, LogOut, Calculator, ShieldCheck, Briefcase } from 'lucide-react';
+import logo from '../assets/logo.png';
+
 export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -22,7 +24,7 @@ export const Sidebar = ({ activeTab, setTab, onLogout, user }) => {
       padding: '24px 12px'
     }}>
       <div style={{ padding: '0 12px 32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <img src="/src/assets/logo.png" alt="ExpenseOracle Logo" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} />
+        <img src={logo} alt="ExpenseOracle Logo" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} />
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>ExpenseOracle</h2>
       </div>
 

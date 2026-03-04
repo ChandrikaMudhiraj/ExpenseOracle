@@ -30,7 +30,7 @@ class AssistantService:
 
         reason = []
         # if savings rate lower than 20% of salary relative to profile
-        current_savings = profile.get("monthly_savings", savings)
+        current_savings = profile.get("monthly_savings", profile.get("savings", savings))
         if current_savings < salary * 0.2:
             recommendation["savings"] = round(max(current_savings, salary * 0.2), 2)
             reason.append("You are saving less than 20% of your income. Try reducing small daily expenses to improve this.")
@@ -58,9 +58,9 @@ class AssistantService:
 
     def plan_goal(self, goal: Dict[str, Any], profile: Dict[str, Any]) -> Dict[str, Any]:
         # goal: {"name": str, "target_amount": float, "months": int (optional)}
-        income = profile.get("income", 5000)
+        income = profile.get("monthly_income", profile.get("income", 5000))
         monthly_budget = profile.get("monthly_budget", 2000)
-        savings_rate = profile.get("monthly_savings", income * 0.2)
+        savings_rate = profile.get("monthly_savings", profile.get("savings", income * 0.2))
 
         target = float(goal.get("target_amount", 0))
         months = goal.get("months")

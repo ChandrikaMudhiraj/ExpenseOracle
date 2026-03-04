@@ -19,7 +19,7 @@ export const Assistant = ({ user }) => {
         setLoading(true);
 
         try {
-            const res = await api.oracleChat(user?.id || 1, input);
+            const res = await api.oracleChat(input);
             setMessages(prev => [...prev, { role: 'assistant', text: res.response || "I've analyzed your request and updated your strategy." }]);
         } catch (e) {
             setMessages(prev => [...prev, { role: 'assistant', text: "I'm sorry, I'm having trouble connecting to my intelligence core right now.", error: true }]);

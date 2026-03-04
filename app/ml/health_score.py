@@ -12,6 +12,7 @@ class FinancialHealthScore:
         """
         Calculates the health score and identifies key contributors.
         """
+        # Ensure we have some base income from profile if passed 0
         if income <= 0:
             return {
                 "score": 50,

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Mail, Lock, LogIn, UserPlus, Sparkles } from 'lucide-react';
 import { Card } from '../components/Layout';
 import { api } from '../services/api';
+import logo from '../assets/logo.png';
+
 
 export const Auth = ({ onAuthSuccess }) => {
     const [isLogin, setIsLogin] = useState(true);
@@ -55,7 +57,7 @@ export const Auth = ({ onAuthSuccess }) => {
                         overflow: 'hidden',
                         boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
                     }}>
-                        <img src="app/frontend/src/assets/logo.png" alt="ExpenseOracle Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={logo} alt="ExpenseOracle Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <h1 style={{ fontSize: '2.4rem', fontWeight: 800, marginBottom: '8px', background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ExpenseOracle</h1>
                     <p style={{ color: 'var(--muted)', fontSize: '1.1rem' }}>Smart tools for your everyday money</p>
