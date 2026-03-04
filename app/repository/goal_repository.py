@@ -37,3 +37,20 @@ def delete_goal(db: Session, goal_id: int, user_id: int):
         db.commit()
         return True
     return False
+
+
+def add_savings(db: Session, goal_id: int, amount: float, user_id: int):
+    db_goal = db.query(Goal).filter(Goal.id == goal_id, Goal.user_id == user_id).first()
+    if not db_goal:
+        return None
+    
+    if amount <= 0:
+        raise ValueError("Amount must be positive")
+    
+    db_goal.current_saved += amount
+    if db_goal.current_saved > db_goal.target_amount:
+        db_goal.current_saved = db_goal.target_amount
+        
+    db.commit()
+    db.refresh(db_goal)
+    return db_goal

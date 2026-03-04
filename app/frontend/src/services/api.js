@@ -160,5 +160,10 @@ export const api = {
         return await request(`${BASE_URL}/goals/${goalId}`, {
             method: 'DELETE'
         });
+    },
+    addGoalSavings: async (goalId, amount) => {
+        return await request(`${BASE_URL}/goals/${goalId}/add-savings?amount=${amount}`, {
+            method: 'POST'
+        });
     }
 };

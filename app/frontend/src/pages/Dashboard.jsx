@@ -13,14 +13,17 @@ export const Dashboard = ({ user }) => {
         loading: true
     });
 
+    const [goals, setGoals] = useState([]);
+
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [health, forecast, analytics, anomaliesData] = await Promise.all([
+                const [health, forecast, analytics, anomaliesData, goalsData] = await Promise.all([
                     api.getHealthScore(),
                     api.getForecast(),
                     api.getAnalytics(),
-                    api.getAnomalies()
+                    api.getAnomalies(),
+                    api.getGoals()
                 ]);
                 setData({
                     health,
@@ -29,6 +32,7 @@ export const Dashboard = ({ user }) => {
                     anomalies: anomaliesData.anomalies || [],
                     loading: false
                 });
+                setGoals(goalsData || []);
             } catch (e) {
                 console.error("Failed to load dashboard data", e);
                 setData(d => ({ ...d, loading: false }));
@@ -39,6 +43,13 @@ export const Dashboard = ({ user }) => {
 
     if (data.loading) return <div style={{ padding: '40px', color: 'var(--muted)' }}>Loading intelligence...</div>;
 
+    const totalExpenses = data.health?.metrics?.total_expenses || 0;
+    const monthlyIncome = user?.monthly_income || 0;
+    const overspending = totalExpenses > monthlyIncome;
+
+    const mainGoal = goals.length > 0 ? goals[0] : null;
+    const goalPercent = mainGoal ? Math.min(100, (mainGoal.current_saved / mainGoal.target_amount) * 100) : 0;
+
     const forecastData = (data.analytics?.series?.forecast_vs_actual || []).map((item) => ({
         name: String(item.month || 'Unknown'),
         actual: typeof item.actual === 'number' ? item.actual : 0,
@@ -47,7 +58,7 @@ export const Dashboard = ({ user }) => {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <header style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <header style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', flexWrap: 'wrap' }}>
                 <div>
                     <h1 style={{ fontSize: '2.4rem', fontWeight: 800, marginBottom: '8px', background: 'linear-gradient(to right, #ffffff, var(--muted))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                         Oracle Intelligence
@@ -58,47 +69,64 @@ export const Dashboard = ({ user }) => {
                     </p>
                     <div style={{ display: 'flex', gap: '20px', marginTop: '12px' }}>
                         <div style={{ fontSize: '0.85rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '6px' }}>
-                            Income: <span style={{ color: 'white', fontWeight: 600 }}>${(user?.monthly_income || 0).toLocaleString()}</span>
+                            Income: <span style={{ color: 'white', fontWeight: 600 }}>${(monthlyIncome).toLocaleString()}</span>
                         </div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--muted)', background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '6px' }}>
                             Risk: <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{user?.risk_tolerance || 'Moderate'}</span>
                         </div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                    {data.health?.metrics?.budget_usage_pct > 100 && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                    {overspending && (
                         <div style={{
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
                             color: '#ef4444',
-                            padding: '6px 12px',
+                            padding: '10px 16px',
                             background: 'rgba(239, 68, 68, 0.1)',
-                            borderRadius: '4px',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            animation: 'pulse 2s infinite'
+                            borderRadius: '8px',
+                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            maxWidth: '400px',
+                            textAlign: 'right'
                         }}>
-                            ⚠️ WARNING: BUDGET EXCEEDED
+                            ⚠️ You are spending more than you earn (${totalExpenses.toLocaleString()} vs ${monthlyIncome.toLocaleString()}). Consider reviewing your budget.
                         </div>
                     )}
-                    <div style={{
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        color: '#10b981',
-                        padding: '10px 20px',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        borderRadius: '30px',
-                        border: '1px solid rgba(16, 185, 129, 0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}>
-                        <span style={{ width: 8, height: 8, background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }}></span>
-                        Oracle Neural Link: Secure
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {data.health?.metrics?.budget_usage_pct > 100 && (
+                            <div style={{
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                color: '#ef4444',
+                                padding: '6px 12px',
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                borderRadius: '4px',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                animation: 'pulse 2s infinite'
+                            }}>
+                                ⚠️ BUDGET EXCEEDED
+                            </div>
+                        )}
+                        <div style={{
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            color: '#10b981',
+                            padding: '10px 20px',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            borderRadius: '30px',
+                            border: '1px solid rgba(16, 185, 129, 0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}>
+                            <span style={{ width: 8, height: 8, background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }}></span>
+                            Oracle Neural Link: Secure
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
                 <MetricCard
                     label={
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -132,13 +160,30 @@ export const Dashboard = ({ user }) => {
                     icon={DollarSign}
                     color="#10b981"
                 />
-                <MetricCard
-                    label="Unusual Spending"
-                    value={(data.anomalies?.length || 0).toString()}
-                    subtitle={(data.anomalies || []).length === 0 ? "Everything looks normal." : "Check high-cost items."}
-                    icon={ShieldAlert}
-                    color="#ef4444"
-                />
+                {mainGoal ? (
+                    <Card title="🎯 Goal Progress" style={{ padding: '16px' }}>
+                        <div style={{ marginTop: '4px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: 600 }}>{mainGoal.name}</span>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{goalPercent.toFixed(0)}%</span>
+                            </div>
+                            <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
+                                <div style={{ width: `${goalPercent}%`, height: '100%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)44' }}></div>
+                            </div>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                                Saved <span style={{ color: 'white', fontWeight: 700 }}>${mainGoal.current_saved.toLocaleString()}</span> of ${mainGoal.target_amount.toLocaleString()}
+                            </p>
+                        </div>
+                    </Card>
+                ) : (
+                    <MetricCard
+                        label="Unusual Spending"
+                        value={(data.anomalies?.length || 0).toString()}
+                        subtitle={(data.anomalies || []).length === 0 ? "Everything looks normal." : "Check high-cost items."}
+                        icon={ShieldAlert}
+                        color="#ef4444"
+                    />
+                )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>

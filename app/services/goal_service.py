@@ -19,3 +19,7 @@ class GoalService:
     @staticmethod
     def delete_goal(db: Session, goal_id: int, user_id: int):
         return goal_repository.delete_goal(db, goal_id, user_id)
+
+    @staticmethod
+    def add_savings(db: Session, goal_id: int, amount: float, user_id: int):
+        return goal_repository.add_savings(db, goal_id, amount, user_id)

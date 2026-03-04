@@ -33,3 +33,14 @@ def delete_goal(goal_id: int, db: Session = Depends(get_db), current_user: User 
     if not service.delete_goal(db, goal_id, current_user.id):
         raise HTTPException(status_code=404, detail="Goal not found")
     return {"message": "Goal deleted"}
+
+
+@router.post("/{goal_id}/add-savings", response_model=GoalResponse)
+def add_savings(goal_id: int, amount: float, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        goal = service.add_savings(db, goal_id, amount, current_user.id)
+        if not goal:
+            raise HTTPException(status_code=404, detail="Goal not found")
+        return goal
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
