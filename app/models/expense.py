@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -14,5 +14,6 @@ class Expense(Base):
     amount = Column(Float, nullable=False)
     category = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_recurring = Column(Boolean, default=False, nullable=False)
 
     user = relationship("User", back_populates="expenses")

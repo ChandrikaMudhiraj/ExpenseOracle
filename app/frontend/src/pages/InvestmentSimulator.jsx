@@ -24,13 +24,13 @@ export const InvestmentSimulator = () => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <header>
-                <h1 style={{ fontSize: '1.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h1 style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Calculator color="var(--primary)" /> Future Investment Growth
                 </h1>
                 <p style={{ color: 'var(--muted)' }}>We estimate how your investment may grow over time based on market patterns.</p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'clamp(250px, 100%, 1fr) 1fr', gap: '24px', minWidth: 0 }}>
                 <Card title="Choose Your Savings Plan">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <div>
@@ -38,7 +38,7 @@ export const InvestmentSimulator = () => {
                             <input
                                 type="number"
                                 value={principal}
-                                onChange={e => setPrincipal(e.target.value)}
+                                onChange={e => setPrincipal(Number(e.target.value))}
                                 style={{ width: '100%', background: 'var(--background)', border: '1px solid var(--glass-border)', padding: '12px', borderRadius: '8px', color: 'white' }}
                             />
                         </div>
@@ -47,7 +47,7 @@ export const InvestmentSimulator = () => {
                             <input
                                 type="number"
                                 value={years}
-                                onChange={e => setYears(e.target.value)}
+                                onChange={e => setYears(Number(e.target.value))}
                                 style={{ width: '100%', background: 'var(--background)', border: '1px solid var(--glass-border)', padding: '12px', borderRadius: '8px', color: 'white' }}
                             />
                         </div>

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: expense-oracle
+    env: docker
+    branch: main
+    dockerfilePath: Dockerfile
+    healthCheckPath: /health
+    plan: starter
+    envVars:
+      - key: ENABLE_DASHBOARD
+        value: "true"
+      - key: ENABLE_HEAVY_ML
+        value: "true"
+      - key: AUTONOMOUS_ENABLED
+        value: "true"
+      - key: PROJECT_NAME
+        value: "ExpenseOracle"
+      - key: SECRET_KEY
+        value: "REPLACE_WITH_STRONG_SECRET"
+      - key: ALGORITHM
+        value: "HS256"
+      - key: DATABASE_URL
+        value: "REPLACE_WITH_RENDER_POSTGRES_URL"
+      - key: REDIS_URL
+        value: "REPLACE_WITH_RENDER_REDIS_URL"

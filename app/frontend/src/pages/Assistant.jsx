@@ -21,7 +21,7 @@ export const Assistant = ({ user }) => {
     };
 
     useEffect(() => {
-        scrollToBottom();
+        if (messages.length > 1) scrollToBottom();
     }, [messages]);
 
     const handleSend = async () => {

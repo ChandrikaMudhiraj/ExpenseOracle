@@ -8,7 +8,7 @@ export const Expenses = () => {
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
     const [editingExpense, setEditingExpense] = useState(null);
-    const [newExpense, setNewExpense] = useState({ title: '', amount: '', category: 'General', created_at: '' });
+    const [newExpense, setNewExpense] = useState({ title: '', amount: '', category: 'General', created_at: '', is_recurring: false });
 
     const fetchExpenses = async () => {
         try {
@@ -41,7 +41,7 @@ export const Expenses = () => {
             }
             setShowAdd(false);
             setEditingExpense(null);
-            setNewExpense({ title: '', amount: '', category: 'General', created_at: '' });
+            setNewExpense({ title: '', amount: '', category: 'General', created_at: '', is_recurring: false });
             fetchExpenses();
         } catch (e) {
             console.error("Failed to save expense", e);
@@ -54,7 +54,8 @@ export const Expenses = () => {
             title: exp.title,
             amount: exp.amount,
             category: exp.category,
-            created_at: new Date(exp.created_at).toISOString().split('T')[0]
+            created_at: new Date(exp.created_at).toISOString().split('T')[0],
+            is_recurring: exp.is_recurring || false
         });
         setShowAdd(true);
     };
@@ -147,9 +148,21 @@ export const Expenses = () => {
                                 style={{ width: '100%', background: 'var(--background)', border: '1px solid var(--glass-border)', padding: '10px', borderRadius: '8px', color: 'white' }}
                             />
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <button type="submit" className="btn-primary" style={{ flex: 1 }}>Save</button>
                             <button type="button" className="btn-ghost" onClick={() => setShowAdd(false)}>Cancel</button>
+                        </div>
+                        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'rgba(99,102,241,0.05)', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.15)' }}>
+                            <input
+                                type="checkbox"
+                                id="is_recurring"
+                                checked={newExpense.is_recurring}
+                                onChange={e => setNewExpense({ ...newExpense, is_recurring: e.target.checked })}
+                                style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                            />
+                            <label htmlFor="is_recurring" style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)', cursor: 'pointer', userSelect: 'none' }}>
+                                🔁 <strong>Recurring monthly expense</strong> <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(e.g. rent, subscriptions, EMIs)</span>
+                            </label>
                         </div>
                     </form>
                 </Card>
@@ -164,6 +177,7 @@ export const Expenses = () => {
                                 <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500 }}>Expense Type</th>
                                 <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500 }}>Date</th>
                                 <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500, textAlign: 'right' }}>Amount</th>
+                                <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500, textAlign: 'center' }}>Recurring</th>
                                 <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
@@ -192,6 +206,19 @@ export const Expenses = () => {
                                     </td>
                                     <td style={{ padding: '16px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--primary)' }}>
                                         ${exp.amount.toFixed(2)}
+                                    </td>
+                                    <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                                        {exp.is_recurring && (
+                                            <span style={{
+                                                padding: '3px 10px',
+                                                background: 'rgba(99, 102, 241, 0.15)',
+                                                borderRadius: '12px',
+                                                fontSize: '0.75rem',
+                                                color: 'var(--primary)',
+                                                fontWeight: 600,
+                                                border: '1px solid rgba(99,102,241,0.3)'
+                                            }}>🔁 Recurring</span>
+                                        )}
                                     </td>
                                     <td style={{ padding: '16px 12px', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>

@@ -8,6 +8,7 @@ class ExpenseCreate(BaseModel):
     amount: float
     category: Optional[str] = None
     created_at: Optional[datetime] = None
+    is_recurring: Optional[bool] = False
 
 
 class ExpenseUpdate(BaseModel):
@@ -15,6 +16,7 @@ class ExpenseUpdate(BaseModel):
     amount: Optional[float] = None
     category: Optional[str] = None
     created_at: Optional[datetime] = None
+    is_recurring: Optional[bool] = None
 
 
 class ExpenseResponse(BaseModel):
@@ -24,6 +26,7 @@ class ExpenseResponse(BaseModel):
     amount: float
     category: Optional[str]
     created_at: datetime
+    is_recurring: bool = False
 
     class Config:
         from_attributes = True

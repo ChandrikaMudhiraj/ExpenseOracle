@@ -8,6 +8,19 @@ button {
     padding: 6px 10px; 
 }
 
+/* Responsive grid utilities */
+.grid-responsive {
+    display: grid;
+    gap: 24px;
+    width: 100%;
+}
+
+.flex-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
 /* Responsive styles for all devices */
 
 /* MOBILE DEVICES (< 640px) */
@@ -52,10 +65,12 @@ button {
         flex-direction: column !important;
         align-items: flex-start !important;
         gap: 12px !important;
+        padding: 20px !important;
     }
     
     .flex-responsive {
         flex-direction: column !important;
+        gap: 12px !important;
     }
     
     button {
@@ -86,8 +101,22 @@ button {
         font-size: 1.1rem !important;
     }
     
+    h3 {
+        font-size: 1rem !important;
+    }
+    
     main {
         padding: 12px !important;
+    }
+    
+    /* Card responsive adjustments */
+    .card {
+        padding: 16px !important;
+    }
+    
+    /* Investment Simulator responsive */
+    [style*=\"gridTemplateColumns: 'clamp\"] {
+        grid-template-columns: 1fr !important;
     }
 }
 
@@ -109,7 +138,7 @@ button {
     }
     
     .grid-responsive {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
         gap: 16px !important;
     }
     

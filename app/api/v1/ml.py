@@ -83,17 +83,24 @@ def get_autonomous_actions(current_user: User = Depends(get_current_user), db: S
     }
 
 @router.get("/investment-simulator")
-def simulate_investments(current_user: User = Depends(get_current_user)):
+def simulate_investments(current_user: User = Depends(get_current_user), principal: float = None, years: int = 1):
     if not settings.ENABLE_HEAVY_ML:
         raise HTTPException(status_code=503, detail="Investment simulation is disabled by feature flag")
     
     income = current_user.monthly_income or 0.0
-    # Use 20% of income as default simulation principal if not provided
-    principal = income * 0.2
+    # Use provided principal or 20% of income as default
+    if principal is None:
+        principal = income * 0.2
     
+    # Validate inputs
+    principal = max(100, min(principal, income * 10))  # Between $100 and 10x income
+    years = max(1, min(years, 50))  # Between 1 and 50 years
+    
+    sim_results = InvestmentOptimizer.simulate_future_growth(principal, years, iterations=1000)
     return {
         "principal": principal,
-        "simulations": InvestmentOptimizer.simulate_future_growth(principal, 1)
+        "years": years,
+        "simulations": sim_results.get("simulations", {})
     }
 
 @router.get("/health-score")
@@ -138,14 +145,19 @@ def oracle_chat(query: str = Body(..., embed=True), current_user: User = Depends
 
 @router.get("/analytics")
 def get_visual_analytics(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not settings.ENABLE_HEAVY_ML:
+        raise HTTPException(status_code=503, detail="Analytics features are disabled by feature flag")
+    
     user_id = current_user.id
     expenses = list_expenses(db, user_id)
     prepared_data = _prepare_expenses(expenses)
     
     income = current_user.monthly_income or 10000.0
+    # Use same principal validation as investment-simulator endpoint
+    principal = max(100, min(income * 0.2, income * 10))
     
     forecast_vs_actual = AnalyticsEngine.get_forecast_vs_actual(prepared_data)
-    sim_data = InvestmentOptimizer.simulate_future_growth(income, 1)
+    sim_data = InvestmentOptimizer.simulate_future_growth(principal, 1)
     growth_distribution = AnalyticsEngine.get_monte_carlo_distribution(sim_data)
     
     return {

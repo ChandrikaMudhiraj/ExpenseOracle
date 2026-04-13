@@ -15,17 +15,19 @@ export const Dashboard = ({ user, onNotifications }) => {
 
     const [goals, setGoals] = useState([]);
     const [expenses, setExpenses] = useState([]);
+    const [budgets, setBudgets] = useState([]);
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [health, forecast, analytics, anomaliesData, goalsData, expensesData] = await Promise.all([
+                const [health, forecast, analytics, anomaliesData, goalsData, expensesData, budgetsData] = await Promise.all([
                     api.getHealthScore(),
                     api.getForecast(),
                     api.getAnalytics(),
                     api.getAnomalies(),
                     api.getGoals(),
-                    api.getExpenses()
+                    api.getExpenses(),
+                    api.getBudgets()
                 ]);
                 setData({
                     health,
@@ -36,6 +38,7 @@ export const Dashboard = ({ user, onNotifications }) => {
                 });
                 setGoals(goalsData || []);
                 setExpenses(expensesData || []);
+                setBudgets(budgetsData || []);
             } catch (e) {
                 console.error("Failed to load dashboard data", e);
                 setData(d => ({ ...d, loading: false }));
@@ -65,7 +68,8 @@ export const Dashboard = ({ user, onNotifications }) => {
         let notifications = [];
         const mainGoal = goals.length > 0 ? goals[0] : null;
         const goalPercent = mainGoal ? Math.min(100, (mainGoal.current_saved / mainGoal.target_amount) * 100) : 0;
-        
+
+        // 1. Budget Alert: overall spending near income
         if (totalExpenses > monthlyIncome * 0.9) {
             notifications.push({
                 type: 'warning',
@@ -74,6 +78,8 @@ export const Dashboard = ({ user, onNotifications }) => {
                 read: false
             });
         }
+
+        // 2. Goal Progress: first goal near completion
         if (mainGoal && goalPercent >= 80) {
             notifications.push({
                 type: 'success',
@@ -82,8 +88,68 @@ export const Dashboard = ({ user, onNotifications }) => {
                 read: false
             });
         }
+
+        // 3. Per-budget category near limit (≥80%)
+        const categorySpend = {};
+        expenses.forEach(exp => {
+            const cat = (exp.category || '').toLowerCase();
+            categorySpend[cat] = (categorySpend[cat] || 0) + exp.amount;
+        });
+        budgets.forEach(b => {
+            const spent = categorySpend[(b.category || '').toLowerCase()] || 0;
+            const pct = b.limit_amount > 0 ? (spent / b.limit_amount) * 100 : 0;
+            if (pct >= 80 && pct < 100) {
+                notifications.push({
+                    type: 'warning',
+                    title: `${b.category} Budget Warning`,
+                    message: `You've used ${pct.toFixed(0)}% of your ${b.category} budget ($${spent.toFixed(0)} of $${b.limit_amount}).`,
+                    read: false
+                });
+            } else if (pct >= 100) {
+                notifications.push({
+                    type: 'warning',
+                    title: `${b.category} Budget Exceeded`,
+                    message: `You've exceeded your ${b.category} budget! Spent $${spent.toFixed(0)} vs limit of $${b.limit_amount}.`,
+                    read: false
+                });
+            }
+        });
+
+        // 4. Low savings rate
+        const savingsRate = data.health?.metrics?.savings_rate_pct || 0;
+        if (monthlyIncome > 0 && savingsRate < 10 && savingsRate >= 0) {
+            notifications.push({
+                type: 'warning',
+                title: 'Low Savings Rate',
+                message: `Your savings rate is only ${savingsRate.toFixed(1)}% — consider reducing non-essential spending.`,
+                read: false
+            });
+        }
+
+        // 5. No goal set
+        if (goals.length === 0) {
+            notifications.push({
+                type: 'info',
+                title: 'No Financial Goal Set',
+                message: 'You haven\'t set a savings goal yet. Setting one helps you stay on track!',
+                read: false
+            });
+        }
+
+        // 6. Emergency fund below 3 months
+        const totalSaved = goals.reduce((s, g) => s + (g.current_saved || 0), 0);
+        const emergencyMonths = monthlyIncome > 0 ? totalSaved / monthlyIncome : 0;
+        if (monthlyIncome > 0 && emergencyMonths < 3) {
+            notifications.push({
+                type: 'info',
+                title: 'Emergency Fund Insufficient',
+                message: `Your emergency fund covers ${emergencyMonths.toFixed(1)} months. Target is 3 months of income ($${(monthlyIncome * 3).toLocaleString()}).`,
+                read: false
+            });
+        }
+
         return notifications;
-    }, [totalExpenses, monthlyIncome, goals]);
+    }, [totalExpenses, monthlyIncome, goals, budgets, expenses, data.health]);
 
     // Send notifications to parent
     useEffect(() => {
@@ -267,7 +333,7 @@ export const Dashboard = ({ user, onNotifications }) => {
                 </div>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }} className="grid-responsive">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }} className="grid-responsive">
                 <MetricCard
                     label={
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -327,259 +393,59 @@ export const Dashboard = ({ user, onNotifications }) => {
                 )}
             </div>
 
-            {/* Enhanced Smart Notifications */}
-            {notificationsList.length > 0 && (
-                <Card style={{
-                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%)',
-                    border: '1px solid rgba(245, 158, 11, 0.2)',
-                    borderRadius: '24px',
-                    padding: '32px',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    maxWidth: '100%',
-                    width: '100%'
-                }}>
-                    {/* Background decoration */}
+            {/* Emergency Fund Card */}
+            {(() => {
+                const totalSaved = goals.reduce((s, g) => s + (g.current_saved || 0), 0);
+                const emergencyTarget = monthlyIncome * 3;
+                const emergencyMonths = monthlyIncome > 0 ? Math.min(totalSaved / monthlyIncome, 3) : 0;
+                const emergencyPct = monthlyIncome > 0 ? Math.min((totalSaved / emergencyTarget) * 100, 100) : 0;
+                const isSecured = emergencyMonths >= 3;
+                return (
                     <div style={{
-                        position: 'absolute',
-                        top: '-20%',
-                        right: '-10%',
-                        width: '120px',
-                        height: '120px',
-                        background: 'radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%)',
-                        borderRadius: '50%',
-                        pointerEvents: 'none'
-                    }}></div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', position: 'relative', zIndex: 1 }}>
-                        <div style={{
-                            padding: '14px',
-                            background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-                            borderRadius: '16px',
-                            boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)'
-                        }}>
-                            <AlertTriangle size={28} color="white" />
-                        </div>
-                        <div>
-                            <h3 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 4px 0', color: 'white' }}>Smart Notifications</h3>
-                            <p style={{ fontSize: '0.95rem', color: 'var(--muted)', margin: 0 }}>AI-powered insights and alerts</p>
-                        </div>
-                        <div style={{
-                            marginLeft: 'auto',
-                            padding: '6px 12px',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            borderRadius: '20px',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            color: 'white'
-                        }}>
-                            {notificationsList.length} active
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', zIndex: 1 }}>
-                        {notificationsList.map((notif, index) => (
-                            <div key={index} style={{
-                                padding: '20px 24px',
-                                background: notif.type === 'warning'
-                                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)'
-                                    : 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)',
-                                border: `1px solid ${notif.type === 'warning' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
-                                borderRadius: '16px',
-                                backdropFilter: 'blur(10px)',
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                gap: '16px',
-                                animation: `slideIn 0.5s ease forwards ${index * 0.1}s`,
-                                opacity: 0,
-                                transform: 'translateY(20px)',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease',
-                                maxWidth: '100%',
-                                width: '100%'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
-                                e.currentTarget.style.boxShadow = notif.type === 'warning'
-                                    ? '0 8px 32px rgba(239, 68, 68, 0.2)'
-                                    : '0 8px 32px rgba(16, 185, 129, 0.2)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                                e.currentTarget.style.boxShadow = 'none';
-                            }}
-                            >
-                                <div style={{
-                                    padding: '10px',
-                                    background: notif.type === 'warning' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-                                    borderRadius: '12px',
-                                    flexShrink: 0
-                                }}>
-                                    {notif.type === 'warning' ? <AlertTriangle size={20} color="#fca5a5" /> : <CheckCircle size={20} color="#a7f3d0" />}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{
-                                        fontSize: '1rem',
-                                        fontWeight: 700,
-                                        color: notif.type === 'warning' ? '#fca5a5' : '#a7f3d0',
-                                        marginBottom: '6px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px'
-                                    }}>
-                                        {notif.title}
-                                        <div style={{
-                                            width: '6px',
-                                            height: '6px',
-                                            background: notif.type === 'warning' ? '#fca5a5' : '#a7f3d0',
-                                            borderRadius: '50%',
-                                            animation: 'pulse 2s infinite'
-                                        }}></div>
-                                    </div>
-                                    <div style={{
-                                        fontSize: '0.9rem',
-                                        color: 'rgba(255, 255, 255, 0.8)',
-                                        lineHeight: '1.5',
-                                        marginBottom: '8px'
-                                    }}>
-                                        {notif.message}
-                                    </div>
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px'
-                                    }}>
-                                        <div style={{
-                                            padding: '4px 10px',
-                                            background: 'rgba(255, 255, 255, 0.1)',
-                                            borderRadius: '12px',
-                                            fontSize: '0.7rem',
-                                            fontWeight: 600,
-                                            color: 'var(--muted)',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.05em'
-                                        }}>
-                                            {notif.type === 'warning' ? 'Action Required' : 'Positive Update'}
-                                        </div>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
-                                            Just now
-                                        </span>
-                                    </div>
-                                </div>
-                                <button style={{
-                                    padding: '8px',
-                                    background: 'rgba(255, 255, 255, 0.1)',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    color: 'var(--muted)',
-                                    cursor: 'pointer',
-                                    opacity: 0.7,
-                                    transition: 'all 0.3s ease',
-                                    flexShrink: 0
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Mark as read functionality could be added here
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.target.style.opacity = '1';
-                                    e.target.style.background = 'rgba(255, 255, 255, 0.2)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.target.style.opacity = '0.7';
-                                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-                                }}
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Quick Actions */}
-                    <div style={{
-                        marginTop: '24px',
-                        padding: '20px',
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        padding: '20px 24px',
+                        background: isSecured
+                            ? 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.04) 100%)'
+                            : 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.04) 100%)',
+                        border: `1px solid ${isSecured ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
                         borderRadius: '16px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        position: 'relative',
-                        zIndex: 1
+                        backdropFilter: 'blur(10px)'
                     }}>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '12px' }}>
-                            Quick Actions
-                        </h4>
-                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                            <button style={{
-                                padding: '8px 16px',
-                                background: 'rgba(99, 102, 241, 0.2)',
-                                border: '1px solid rgba(99, 102, 241, 0.3)',
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <div>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--muted)', fontWeight: 600, marginBottom: '2px' }}>🛡️ Emergency Fund</p>
+                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>{emergencyMonths.toFixed(1)}</h2>
+                                    <span style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>/ 3 months secured</span>
+                                </div>
+                            </div>
+                            <span style={{
+                                padding: '4px 12px',
+                                background: isSecured ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)',
+                                color: isSecured ? '#10b981' : '#f59e0b',
                                 borderRadius: '20px',
-                                color: '#a5b4fc',
-                                fontSize: '0.8rem',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.background = 'rgba(99, 102, 241, 0.3)';
-                                e.target.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.background = 'rgba(99, 102, 241, 0.2)';
-                                e.target.style.borderColor = 'rgba(99, 102, 241, 0.3)';
-                            }}
-                            >
-                                View Budget
-                            </button>
-                            <button style={{
-                                padding: '8px 16px',
-                                background: 'rgba(16, 185, 129, 0.2)',
-                                border: '1px solid rgba(16, 185, 129, 0.3)',
-                                borderRadius: '20px',
-                                color: '#6ee7b7',
-                                fontSize: '0.8rem',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.background = 'rgba(16, 185, 129, 0.3)';
-                                e.target.style.borderColor = 'rgba(16, 185, 129, 0.5)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.background = 'rgba(16, 185, 129, 0.2)';
-                                e.target.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-                            }}
-                            >
-                                Set Goal
-                            </button>
-                            <button style={{
-                                padding: '8px 16px',
-                                background: 'rgba(245, 158, 11, 0.2)',
-                                border: '1px solid rgba(245, 158, 11, 0.3)',
-                                borderRadius: '20px',
-                                color: '#fcd34d',
-                                fontSize: '0.8rem',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.background = 'rgba(245, 158, 11, 0.3)';
-                                e.target.style.borderColor = 'rgba(245, 158, 11, 0.5)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.background = 'rgba(245, 158, 11, 0.2)';
-                                e.target.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-                            }}
-                            >
-                                Ask AI
-                            </button>
+                                fontSize: '0.75rem',
+                                fontWeight: 700
+                            }}>{isSecured ? '✓ Secured' : 'Build Up'}</span>
                         </div>
+                        <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
+                            <div style={{
+                                width: `${emergencyPct}%`,
+                                height: '100%',
+                                background: isSecured ? '#10b981' : '#f59e0b',
+                                transition: 'width 0.6s ease',
+                                boxShadow: `0 0 8px ${isSecured ? '#10b981' : '#f59e0b'}66`
+                            }} />
+                        </div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                            {isSecured
+                                ? 'Your emergency fund is fully built! Great work.'
+                                : `Target: $${emergencyTarget.toLocaleString()} — save $${Math.max(0, emergencyTarget - totalSaved).toFixed(0)} more to be secure.`}
+                        </p>
                     </div>
-                </Card>
-            )}
+                );
+            })()}
+            {/* Smart Notifications section removed - notifications now only appear in notification bar */}
+            {/* notificationsList are sent to parent via onNotifications for notification bar display */}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }} className="grid-responsive">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

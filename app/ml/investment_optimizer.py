@@ -1,11 +1,7 @@
-from typing import Dict, List
+from typing import Dict
 import numpy as np
 
 class InvestmentOptimizer:
-    """
-    Advanced Investment Optimizer using historical market patterns.
-    Calculates risk-adjusted returns and growth scores for professional-grade advice.
-    """
 
     PORTFOLIOS = {
         "Conservative": {"mu": 0.05, "sigma": 0.03, "composition": "80% Bonds, 20% Stocks", "risk_free": 0.03},
@@ -14,52 +10,71 @@ class InvestmentOptimizer:
     }
 
     @classmethod
+    def suggest_allocation(cls, surplus: float) -> Dict:
+        """
+        Suggests a savings allocation strategy based on available surplus.
+        Returns friendly advice for different risk profiles.
+        """
+        if surplus <= 0:
+            return {
+                "action": "Focus on reducing expenses first. You don't have extra money to invest right now.",
+                "recommendation": "Start small by cutting back on non-essential spending."
+            }
+        
+        if surplus < 100:
+            return {
+                "action": "Build an emergency fund with $" + str(int(surplus)) + " this month.",
+                "recommendation": "Save this small amount in a high-yield savings account for emergencies."
+            }
+        
+        if surplus < 500:
+            return {
+                "action": "Split your $" + str(int(surplus)) + ": 50% to emergency fund, 50% to a safe savings account.",
+                "recommendation": "This balanced approach keeps you safe while growing your nest egg."
+            }
+        
+        # For larger surpluses, recommend moderate allocation
+        return {
+            "action": "Great news! With $" + str(int(surplus)) + " extra, try: 40% emergency fund, 40% safe savings, 20% investments.",
+            "recommendation": "Start with bonds or index funds for a steady, safe return."
+        }
+
+    @classmethod
     def simulate_future_growth(cls, principal: float, years: int = 1, iterations: int = 1000) -> Dict:
-        """
-        Runs a simulation for each portfolio to project potential outcomes based on market patterns.
-        """
+        import time
         results = {}
+
         for name, data in cls.PORTFOLIOS.items():
             mu = data["mu"]
             sigma = data["sigma"]
             rf = data["risk_free"]
-            
-            # Simulated annual returns: R = mu + sigma * Z
-            # Over T years: (1 + R)^T
-            # For Monte Carlo, we simulate 1000 paths
-            simulated_annual_returns = np.random.normal(mu, sigma, iterations)
-            final_values = principal * (1 + simulated_annual_returns) ** years
-            
+
+            # Use current timestamp + principal + years for truly random seed
+            seed = int(time.time() * 1000000 + principal) % (2**31)
+            rng = np.random.default_rng(seed)
+
+            # Generate yearly returns for each simulation
+            yearly_returns = rng.normal(mu, sigma, (iterations, years))
+
+            # Compound returns
+            compounded_growth = np.prod(1 + yearly_returns, axis=1)
+            final_values = principal * compounded_growth
+
             sharpe_ratio = (mu - rf) / sigma if sigma > 0 else 0
-            
+            # Expected return is simply mu (annual return rate as percentage)
+            expected_return_pct = mu * 100
+
             results[name] = {
                 "composition": data["composition"],
-                "expected_return": f"{int(mu*100)}%",
+                "expected_return": f"{round(expected_return_pct, 2)}%",
                 "risk_reward_score": round(float(sharpe_ratio), 2),
                 "risk_band": "Low Risk" if sigma < 0.05 else "Moderate Risk" if sigma < 0.15 else "High Risk",
                 "projection": {
                     "mean": round(float(np.mean(final_values)), 2),
-                    "lowest_outcome": round(float(np.percentile(final_values, 10)), 2),
-                    "best_outcome": round(float(np.percentile(final_values, 90)), 2),
+                    "lowest_outcome": round(float(np.percentile(final_values, 5)), 2),
+                    "best_outcome": round(float(np.percentile(final_values, 95)), 2),
                     "risk_level": f"{int(sigma*100)}%"
                 }
             }
-        return results
 
-    @classmethod
-    def suggest_allocation(cls, surplus: float, risk_tolerance: str = "Moderate") -> Dict:
-        """
-        Provides risk-adjusted investment advice.
-        """
-        if surplus <= 0:
-            return {"message": "Focus on emergency savings first.", "action": "Save 100% of future surplus."}
-        
-        portfolio = cls.PORTFOLIOS.get(risk_tolerance, cls.PORTFOLIOS["Moderate"])
-        sharpe = (portfolio["mu"] - portfolio["risk_free"]) / portfolio["sigma"]
-        
-        return {
-            "surplus_available": round(surplus, 2),
-            "suggested_portfolio": risk_tolerance,
-            "risk_reward_score": round(sharpe, 2),
-            "action": f"Automatically allocate ${round(surplus, 2)} into your {risk_tolerance} portfolio for a target {int(portfolio['mu']*100)}% return."
-        }
+        return {"simulations": results}
