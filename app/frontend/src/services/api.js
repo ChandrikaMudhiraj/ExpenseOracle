@@ -1,124 +1,204 @@
 const BASE_URL = ''; // Proxied via Vite in dev, same origin in production
 
+const request = async (url, options = {}) => {
+    const token = localStorage.getItem('oracle_token');
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { ...options, headers });
+
+    if (response.status === 401) {
+        window.dispatchEvent(new CustomEvent('oracle_auth_error'));
+        throw new Error('Unauthorized');
+    }
+
+    if (!response.ok) {
+        // If we get an HTML response from an API call, something is wrong with routing
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+            throw new Error('API routing error: Received HTML instead of JSON. The system might be misconfigured.');
+        }
+        try {
+            const error = await response.json();
+            throw new Error(error.detail || 'API request failed');
+        } catch (e) {
+            throw new Error('API request failed with status ' + response.status);
+        }
+    }
+    return response.json();
+};
+
 export const api = {
     // Auth
     login: async (email, password) => {
-        const res = await fetch(`${BASE_URL}/auth/login`, {
+        const data = await request(`${BASE_URL}/auth/login`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
-        if (!res.ok) throw new Error('Login failed');
-        return res.json();
+        if (data.access_token) {
+            localStorage.setItem('oracle_token', data.access_token);
+        }
+        return data;
     },
-    register: async (email, password) => {
-        const res = await fetch(`${BASE_URL}/auth/register`, {
+    register: async (email, password, monthlyIncome, riskTolerance = 'Moderate', savingsTarget = 20.0) => {
+        return await request(`${BASE_URL}/auth/register`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({
+                email,
+                password,
+                monthly_income: parseFloat(monthlyIncome),
+                risk_tolerance: riskTolerance,
+                savings_target_percent: parseFloat(savingsTarget)
+            })
         });
-        if (!res.ok) throw new Error('Registration failed');
-        return res.json();
     },
 
     // Expenses
-    getExpenses: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/expenses/?user_id=${userId}`);
-        return res.json();
+    getExpenses: async () => {
+        return await request(`${BASE_URL}/expenses/`);
     },
-    addExpense: async (userId, expenseData) => {
-        const res = await fetch(`${BASE_URL}/expenses/?user_id=${userId}`, {
+    addExpense: async (expenseData) => {
+        return await request(`${BASE_URL}/expenses/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(expenseData)
         });
-        return res.json();
+    },
+    updateExpense: async (expenseId, expenseData) => {
+        return await request(`${BASE_URL}/expenses/${expenseId}`, {
+            method: 'PUT',
+            body: JSON.stringify(expenseData)
+        });
+    },
+    deleteExpense: async (expenseId) => {
+        return await request(`${BASE_URL}/expenses/${expenseId}`, {
+            method: 'DELETE'
+        });
     },
 
     // Budgets
-    getBudgets: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/budgets/?user_id=${userId}`);
-        return res.json();
+    getBudgets: async () => {
+        return await request(`${BASE_URL}/budgets/`);
     },
-    addBudget: async (userId, budgetData) => {
-        const res = await fetch(`${BASE_URL}/budgets/?user_id=${userId}`, {
+    addBudget: async (budgetData) => {
+        return await request(`${BASE_URL}/budgets/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(budgetData)
         });
-        return res.json();
+    },
+    updateBudget: async (budgetId, budgetData) => {
+        return await request(`${BASE_URL}/budgets/${budgetId}`, {
+            method: 'PUT',
+            body: JSON.stringify(budgetData)
+        });
+    },
+    deleteBudget: async (budgetId) => {
+        return await request(`${BASE_URL}/budgets/${budgetId}`, {
+            method: 'DELETE'
+        });
     },
 
     // ML & Intelligence
-    getForecast: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/forecast?user_id=${userId}`);
-        return res.json();
+    getForecast: async () => {
+        return await request(`${BASE_URL}/ml/forecast`);
     },
-    getAnomalies: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/anomalies?user_id=${userId}`);
-        return res.json();
+    getAnomalies: async (threshold = 2.0) => {
+        return await request(`${BASE_URL}/ml/anomalies?threshold=${threshold}`);
     },
-    getHealthScore: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/health-score?user_id=${userId}`);
-        return res.json();
+    getHealthScore: async () => {
+        return await request(`${BASE_URL}/ml/health-score`);
     },
-    getAutonomousActions: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/autonomous-actions?user_id=${userId}`);
-        return res.json();
+    getAutonomousActions: async () => {
+        return await request(`${BASE_URL}/ml/autonomous-actions`);
     },
     simulateInvestments: async (principal, years = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/investment-simulator?principal=${principal}&years=${years}`);
-        return res.json();
+        return await request(`${BASE_URL}/ml/investment-simulator?principal=${principal}&years=${years}`);
     },
-    oracleChat: async (userId, query) => {
-        const res = await fetch(`${BASE_URL}/ml/chat?user_id=${userId}`, {
+    oracleChat: async (query) => {
+        return await request(`${BASE_URL}/ml/chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query })
         });
-        return res.json();
     },
-    getAnalytics: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/ml/analytics?user_id=${userId}`);
-        return res.json();
-    },
-    runAutonomousDemo: async () => {
-        const res = await fetch(`${BASE_URL}/dashboard/autonomous_actions`);
-        return res.json();
+    getAnalytics: async () => {
+        return await request(`${BASE_URL}/ml/analytics`);
     },
 
     // Profile & Goals
-    updateProfile: async (userId, profileData) => {
-        const { income, savings, risk } = profileData;
-        const res = await fetch(`${BASE_URL}/auth/profile?user_id=${userId}&income=${income}&savings=${savings}&risk=${risk}`, {
-            method: 'PUT'
+    updateProfile: async (profileData) => {
+        return await request(`${BASE_URL}/auth/profile`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                monthly_income: parseFloat(profileData.income),
+                monthly_savings: parseFloat(profileData.savings),
+                risk_tolerance: profileData.risk,
+                savings_target_percent: parseFloat(profileData.target_pct || 20.0)
+            })
         });
-        return res.json();
     },
-    getGoals: async (userId = 1) => {
-        const res = await fetch(`${BASE_URL}/goals/?user_id=${userId}`);
-        return res.json();
+    getGoals: async () => {
+        return await request(`${BASE_URL}/goals/`);
     },
-    addGoal: async (userId, goalData) => {
-        const res = await fetch(`${BASE_URL}/goals/?user_id=${userId}`, {
+    addGoal: async (goalData) => {
+        return await request(`${BASE_URL}/goals/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(goalData)
         });
-        return res.json();
     },
     updateGoal: async (goalId, goalData) => {
-        const res = await fetch(`${BASE_URL}/goals/${goalId}`, {
+        return await request(`${BASE_URL}/goals/${goalId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(goalData)
         });
-        return res.json();
     },
     deleteGoal: async (goalId) => {
-        const res = await fetch(`${BASE_URL}/goals/${goalId}`, {
+        return await request(`${BASE_URL}/goals/${goalId}`, {
             method: 'DELETE'
         });
-        return res.json();
+    },
+    addGoalSavings: async (goalId, amount) => {
+        return await request(`${BASE_URL}/goals/${goalId}/add-savings?amount=${amount}`, {
+            method: 'POST'
+        });
+    },
+
+    // Reports
+    downloadExpensesCSV: async () => {
+        const token = localStorage.getItem('oracle_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`${BASE_URL}/reports/expenses/csv`, { headers });
+        if (!response.ok) throw new Error('Failed to download CSV');
+        const data = await response.json();
+        return data.csv;
+    },
+    downloadMonthlySummaryPDF: async (year, month) => {
+        const token = localStorage.getItem('oracle_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`${BASE_URL}/reports/monthly-summary/pdf?year=${year}&month=${month}`, { headers });
+        if (!response.ok) throw new Error('Failed to download PDF');
+        const data = await response.json();
+        return data.pdf;
+    },
+    downloadGoalProgressPDF: async () => {
+        const token = localStorage.getItem('oracle_token');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        const response = await fetch(`${BASE_URL}/reports/goal-progress/pdf`, { headers });
+        if (!response.ok) throw new Error('Failed to download PDF');
+        const data = await response.json();
+        return data.pdf;
     }
 };

@@ -11,7 +11,7 @@ class Goal(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
     target_amount = Column(Float, nullable=False)
-    current_amount = Column(Float, default=0.0)
+    current_saved = Column(Float, default=0.0)
     deadline = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

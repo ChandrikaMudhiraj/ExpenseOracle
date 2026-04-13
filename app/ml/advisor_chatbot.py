@@ -1,107 +1,102 @@
 from typing import List, Dict, Optional
-from app.ml.forecaster import spendingForecaster
-from app.ml.anomaly_detector import AnomalyDetector
-from app.ml.investment_optimizer import InvestmentOptimizer
-from app.ml.health_score import FinancialHealthScore
+import logging
+
+logger = logging.getLogger(__name__)
 
 class FinancialAdvisorChatbot:
     """
-    Context-Aware AI Financial Advisor Chatbot.
-    Retrieves real-time spending, forecast, and health data to construct precise recommendations.
+    Friendly AI Financial Advisor - uses simple language for easy understanding.
     """
 
     @classmethod
     def process_query(cls, query: str, user_id: int, expenses: List[Dict], monthly_budget: float, income: float) -> Dict:
         """
-        Processes a user query by fetching full financial context.
+        Chat with a friendly AI advisor who explains things simply.
         """
-        query_lower = query.lower()
-        
-        # 1. Gather Full Financial Context
-        health = FinancialHealthScore.calculate(expenses, monthly_budget, income)
-        forecast_result = spendingForecaster.predict_next_month(expenses)
-        forecast = forecast_result['monthly_forecast']
-
-        # Filter to last 30 days only for context
-        from datetime import datetime, timedelta, timezone
-        now = datetime.now(timezone.utc)
-        cutoff = now - timedelta(days=30)
-        recent_expenses = []
-        for e in expenses:
-            ts = e['created_at']
-            if ts is not None:
-                if hasattr(ts, 'tzinfo') and ts.tzinfo is None:
-                    ts = ts.replace(tzinfo=timezone.utc)
-                if ts >= cutoff:
-                    recent_expenses.append(e)
-        
-        total_spent_30d = sum(e['amount'] for e in recent_expenses) if recent_expenses else sum(e['amount'] for e in expenses)
-        
-        context_prompt = (
-            f"In the last 30 days you spent ${round(total_spent_30d, 2)}. "
-            f"Forecast predicts ${round(forecast, 2)} spend next month ({forecast_result['trend']} trend, {forecast_result['confidence_level']*100:.0f}% confidence). "
-            f"Financial Health Score: {health['score']}/100."
-        )
-
-        response = ""
-        intent_detected = ""
-
-        # 2. Logic-based response generation (Simulating LLM routing)
-        if any(w in query_lower for w in ["how am i", "health", "score", "status"]):
-            intent_detected = "HEALTH_CHECK"
-            recs = health.get('recommendations', [])
-            rec_text = recs[0] if recs else 'Keep it up — you are doing great!'
-            response = f"Your Financial Health Score is {health.get('score', 'N/A')} ({health.get('status', 'Unknown')}). {rec_text}"
-
-        elif any(w in query_lower for w in ["forecast", "predict", "next month", "future"]):
-            intent_detected = "FORECAST"
-            diff = forecast - monthly_budget
-            if diff > 0:
-                response = f"Forecast predicts you'll overspend by ${round(diff, 2)}. {context_prompt} I suggest locking non-essential categories."
-            else:
-                response = f"You are on track! Forecast predicts ${round(forecast, 2)} spend, leaving a surplus of ${round(abs(diff), 2)}."
-
-        elif any(w in query_lower for w in ["invest", "save", "money", "portfolio"]):
-            intent_detected = "INVESTMENT"
-            surplus = monthly_budget - forecast
-            advice = InvestmentOptimizer.suggest_allocation(max(0, surplus))
-            response = f"With your health score of {health.get('score', 'N/A')}, I recommend: {advice.get('action', 'diversify your portfolio')}"
-
-        elif any(w in query_lower for w in ["expense", "spent", "transaction"]):
-            intent_detected = "EXPENSES"
-            top_cat = "various"
-            if expenses:
-                cats = [e['category'] for e in expenses]
-                top_cat = max(set(cats), key=cats.count)
-            response = f"You've logged {len(expenses)} transactions recently. Your most frequent category is '{top_cat}'. {context_prompt}"
-
-        elif any(w in query_lower for w in ["budget", "limit", "cap"]):
-            intent_detected = "BUDGET"
-            utilization = ((forecast / monthly_budget) * 100) if monthly_budget > 0 else 0
-            response = f"Your total monthly budget is set at ${monthly_budget}. You're currently projected to utilize {utilization:.1f}% of it. {context_prompt}"
-
-        elif any(w in query_lower for w in ["tip", "advice", "help", "guide"]):
-            intent_detected = "ADVICE"
-            response = f"Financial Tip: Consider the 50/30/20 rule. Allocate 50% to needs, 30% to wants, and 20% to savings. Your current health score is {health['score']}, meaning you have a {health['status']} foundation."
-
-        else:
+        try:
+            query_lower = query.lower().strip()
+            
+            # 1. Gather context
+            from app.ml.forecaster import spendingForecaster
+            from app.ml.health_score import FinancialHealthScore
+            from app.ml.anomaly_detector import AnomalyDetector
+            from app.ml.investment_optimizer import InvestmentOptimizer
+            
+            health = FinancialHealthScore.calculate(expenses, monthly_budget, income)
+            forecast_result = spendingForecaster.predict_next_month(expenses)
+            forecast = forecast_result['monthly_forecast']
+            health_score = health.get('score', 50)
+            health_status = health.get('status', 'Unknown')
+            
+            response = "I'm here to help! "
             intent_detected = "GENERAL"
-            generic_responses = [
-                f"I've analyzed your data. {context_prompt} How can I help you optimize your wealth today?",
-                f"I'm standing by to help. Currently, your health score is {health['score']}. Ask me about your 'forecast' or 'investment' strategy.",
-                f"Hello! Your data shows a {forecast_result['trend']} trend in spending. What specific area of your finances would you like to discuss?"
-            ]
-            import random
-            response = random.choice(generic_responses)
 
-        return {
-            "query": query,
-            "intent": intent_detected,
-            "context_injected": context_prompt,
-            "response": response,
-            "recommendation_engine_output": {
-                "health_score": health.get('score', 50),
+            # 2. Respond to different questions
+            if any(w in query_lower for w in ["hello", "hi", "hey", "help"]):
+                intent_detected = "GREETING"
+                response = f"Hi there! 😊 Your financial health score is {health_score}/100 (Status: {health_status}). What would you like to know? Ask me about your spending, budget, or savings!"
+
+            elif any(w in query_lower for w in ["how am i", "health", "score", "status"]):
+                intent_detected = "HEALTH_CHECK"
+                recs = health.get('recommendations', [])
+                rec_text = recs[0] if recs else "You're doing great! Keep it up."
+                response = f"Your health score is {health_score} out of 100 - that means your finances are in {health_status.lower()} condition. 💡 Here's a tip: {rec_text}"
+
+            elif any(w in query_lower for w in ["spend", "expense", "cost", "spent"]):
+                intent_detected = "SPENDING"
+                total_spent = sum(e['amount'] for e in expenses)
+                response = f"You've spent ${total_spent:.2f} total. That's about ${total_spent/len(expenses):.2f} per purchase on average. Would you like tips on reducing expenses?"
+
+            elif any(w in query_lower for w in ["forecast", "next month", "predict", "future"]):
+                intent_detected = "FORECAST"
+                diff = forecast - monthly_budget
+                if diff > 0:
+                    response = f"Next month, you might spend ${forecast:.2f} - which is ${diff:.2f} MORE than your budget of ${monthly_budget:.2f}. 📈 You might want to cut back on non-essentials."
+                else:
+                    response = f"Good news! You might spend ${forecast:.2f} next month, which is ${abs(diff):.2f} LESS than your ${monthly_budget:.2f} budget. 🎉 You could save that extra money!"
+
+            elif any(w in query_lower for w in ["save", "invest", "money", "surplus"]):
+                intent_detected = "SAVINGS"
+                surplus = max(0, monthly_budget - forecast)
+                advice = InvestmentOptimizer.suggest_allocation(surplus)
+                response = f"Great question! {advice.get('action', 'Start small!')} 💰 Why? {advice.get('recommendation', 'Building wealth takes time.')}"
+
+            elif any(w in query_lower for w in ["budget", "limit", "spending"]):
+                intent_detected = "BUDGET"
+                if monthly_budget > 0:
+                    utilization = (forecast / monthly_budget) * 100
+                    response = f"Your budget is ${monthly_budget:.2f}. Based on your habits, you'll use {utilization:.0f}% of it next month. "
+                    if utilization > 100:
+                        response += "That's over budget - maybe cut back? 😟"
+                    else:
+                        response += "That's under budget - good control! 👍"
+                else:
+                    response = "You haven't set a budget yet. Creating one is the first step to controlling your money!"
+
+            elif any(w in query_lower for w in ["reduce", "cut", "less", "save more"]):
+                intent_detected = "TIPS"
+                response = "Here are simple ways to spend less: 💡\n1. Track purchases before you buy\n2. Set spending limits per category\n3. Wait 24 hours before buying non-essentials\n4. Use cash instead of cards - it feels more real!"
+
+            else:
+                intent_detected = "GENERAL"
+                response = f"I understand you're asking about your finances! 📊 Your current health score is {health_score}. You can ask me about: Your spending, Budget, Next month forecast, or Ways to save more!"
+
+            return {
+                "query": query,
+                "intent": intent_detected,
+                "response": response,
+                "health_score": health_score,
                 "forecast": round(forecast, 2),
-                "anomalies_detected": len(AnomalyDetector.detect_anomalies(expenses))
+                "success": True
             }
-        }
+            
+        except Exception as e:
+            logger.error(f"Chat error: {str(e)}")
+            return {
+                "query": query,
+                "intent": "ERROR",
+                "response": "Sorry, I had a quick hiccup! 😅 Please try asking something simpler, like 'How am I doing?' or 'What's my forecast?'",
+                "success": False,
+                "error": str(e)
+            }
+

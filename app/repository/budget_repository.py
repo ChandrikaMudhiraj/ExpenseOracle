@@ -12,3 +12,23 @@ def create_budget(db: Session, user_id: int, budget_data: dict):
 
 def get_budgets_by_user(db: Session, user_id: int):
     return db.query(Budget).filter(Budget.user_id == user_id).all()
+
+
+def update_budget(db: Session, budget_id: int, user_id: int, budget_data: dict):
+    budget = db.query(Budget).filter(Budget.id == budget_id, Budget.user_id == user_id).first()
+    if budget:
+        for key, value in budget_data.items():
+            if value is not None:
+                setattr(budget, key, value)
+        db.commit()
+        db.refresh(budget)
+    return budget
+
+
+def delete_budget(db: Session, budget_id: int, user_id: int):
+    budget = db.query(Budget).filter(Budget.id == budget_id, Budget.user_id == user_id).first()
+    if budget:
+        db.delete(budget)
+        db.commit()
+        return True
+    return False

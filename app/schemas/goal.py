@@ -6,7 +6,7 @@ from typing import Optional
 class GoalBase(BaseModel):
     name: str
     target_amount: float
-    current_amount: float = 0.0
+    current_saved: float = 0.0
     deadline: Optional[datetime] = None
 
 
@@ -17,7 +17,7 @@ class GoalCreate(GoalBase):
 class GoalUpdate(BaseModel):
     name: Optional[str] = None
     target_amount: Optional[float] = None
-    current_amount: Optional[float] = None
+    current_saved: Optional[float] = None
     deadline: Optional[datetime] = None
 
 

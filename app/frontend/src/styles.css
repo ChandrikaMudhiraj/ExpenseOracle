@@ -1,3 +1,353 @@
 /* Basic styles for the demo frontend */
-body { margin: 0; padding: 0; }
-button { padding: 6px 10px; }
+body { 
+    margin: 0; 
+    padding: 0; 
+    font-size: 16px;
+}
+button { 
+    padding: 6px 10px; 
+}
+
+/* Responsive grid utilities */
+.grid-responsive {
+    display: grid;
+    gap: 24px;
+    width: 100%;
+}
+
+.flex-responsive {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+/* Responsive styles for all devices */
+
+/* MOBILE DEVICES (< 640px) */
+@media (max-width: 640px) {
+    body {
+        font-size: 14px;
+    }
+    
+    .sidebar {
+        width: 100% !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 12px 8px !important;
+        border-radius: 12px 12px 0 0 !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        z-index: 1000 !important;
+    }
+    
+    nav {
+        flex-direction: row !important;
+        gap: 4px !important;
+        overflow-x: auto !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        margin-bottom: 80px !important;
+        padding: 12px 12px 12px 12px !important;
+    }
+    
+    .grid-responsive {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    
+    header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 20px !important;
+    }
+    
+    .flex-responsive {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    
+    button {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        width: 100% !important;
+    }
+    
+    table {
+        font-size: 12px !important;
+    }
+    
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    input, select, textarea {
+        padding: 10px 8px !important;
+        font-size: 14px !important;
+    }
+    
+    h1 {
+        font-size: 1.4rem !important;
+    }
+    
+    h2 {
+        font-size: 1.1rem !important;
+    }
+    
+    h3 {
+        font-size: 1rem !important;
+    }
+    
+    main {
+        padding: 12px !important;
+    }
+    
+    /* Card responsive adjustments */
+    .card {
+        padding: 16px !important;
+    }
+    
+    /* Investment Simulator responsive */
+    [style*=\"gridTemplateColumns: 'clamp\"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* TABLET DEVICES (640px - 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+    body {
+        font-size: 15px;
+    }
+    
+    .sidebar {
+        width: 180px !important;
+        position: fixed !important;
+        padding: 16px 8px !important;
+    }
+    
+    .main-content {
+        margin-left: calc(180px + 20px) !important;
+        padding: 24px 24px 24px 0 !important;
+    }
+    
+    .grid-responsive {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+        gap: 16px !important;
+    }
+    
+    header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    
+    button {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+    }
+    
+    h1 {
+        font-size: 1.6rem !important;
+    }
+    
+    table {
+        font-size: 13px !important;
+    }
+}
+
+/* LAPTOP & DESKTOP (> 1024px) */
+@media (min-width: 1025px) {
+    .sidebar {
+        width: var(--sidebar-width) !important;
+        position: fixed !important;
+        padding: 24px 12px !important;
+    }
+    
+    .main-content {
+        margin-left: calc(var(--sidebar-width) + 40px) !important;
+        padding: 40px 40px 40px 0 !important;
+    }
+    
+    .grid-responsive {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+        gap: 24px !important;
+    }
+    
+    header {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+    }
+    
+    button {
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* Unified responsive utilities */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.flex-responsive {
+    display: flex;
+}
+
+.grid-responsive {
+    display: grid;
+}
+
+/* Enhanced animations for the new UI */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes shine {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+        transform: translate3d(0, 0, 0);
+    }
+    40%, 43% {
+        transform: translate3d(0, -8px, 0);
+    }
+    70% {
+        transform: translate3d(0, -4px, 0);
+    }
+    90% {
+        transform: translate3d(0, -2px, 0);
+    }
+}
+
+/* Enhanced card styles */
+.card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease forwards;
+}
+
+/* Enhanced button styles */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.btn-ghost {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 24px;
+    color: var(--muted);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}

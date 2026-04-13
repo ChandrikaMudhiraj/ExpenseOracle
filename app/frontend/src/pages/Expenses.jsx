@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, DollarSign, Calendar, Tag } from 'lucide-react';
+import { Plus, Search, Filter, DollarSign, Calendar, Tag, Download } from 'lucide-react';
 import { Card } from '../components/Layout';
 import { api } from '../services/api';
 
-export const Expenses = ({ user }) => {
+export const Expenses = () => {
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
-    const [newExpense, setNewExpense] = useState({ title: '', amount: '', category: 'General' });
+    const [editingExpense, setEditingExpense] = useState(null);
+    const [newExpense, setNewExpense] = useState({ title: '', amount: '', category: 'General', created_at: '', is_recurring: false });
 
     const fetchExpenses = async () => {
         try {
-            const data = await api.getExpenses(user?.id || 1);
+            const data = await api.getExpenses();
             setExpenses(data);
         } catch (e) {
             console.error("Failed to fetch expenses", e);
@@ -27,15 +28,63 @@ export const Expenses = ({ user }) => {
     const handleAdd = async (e) => {
         e.preventDefault();
         try {
-            await api.addExpense(user?.id || 1, {
+            const payload = {
                 ...newExpense,
                 amount: parseFloat(newExpense.amount)
-            });
+            };
+            if (!payload.created_at) delete payload.created_at;
+
+            if (editingExpense) {
+                await api.updateExpense(editingExpense.id, payload);
+            } else {
+                await api.addExpense(payload);
+            }
             setShowAdd(false);
-            setNewExpense({ title: '', amount: '', category: 'General' });
+            setEditingExpense(null);
+            setNewExpense({ title: '', amount: '', category: 'General', created_at: '', is_recurring: false });
             fetchExpenses();
         } catch (e) {
-            console.error("Failed to add expense", e);
+            console.error("Failed to save expense", e);
+        }
+    };
+
+    const handleEdit = (exp) => {
+        setEditingExpense(exp);
+        setNewExpense({
+            title: exp.title,
+            amount: exp.amount,
+            category: exp.category,
+            created_at: new Date(exp.created_at).toISOString().split('T')[0],
+            is_recurring: exp.is_recurring || false
+        });
+        setShowAdd(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this expense?")) return;
+        try {
+            await api.deleteExpense(id);
+            fetchExpenses();
+        } catch (e) {
+            console.error("Failed to delete expense", e);
+        }
+    };
+
+    const handleDownloadCSV = async () => {
+        try {
+            const csvData = await api.downloadExpensesCSV();
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'expenses.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error("Failed to download CSV", e);
+            alert("Failed to download CSV");
         }
     };
 
@@ -43,16 +92,22 @@ export const Expenses = ({ user }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Expenses</h1>
-                    <p style={{ color: 'var(--muted)' }}>Manage your daily transactions</p>
+                    <h1 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Your Spending</h1>
+                    <p style={{ color: 'var(--muted)' }}>Keep track of where your money goes</p>
                 </div>
-                <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setShowAdd(true)}>
-                    <Plus size={18} /> Add Expense
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={handleDownloadCSV}>
+                        <Download size={18} /> Export CSV
+                    </button>
+                    <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => { setEditingExpense(null); setNewExpense({ title: '', amount: '', category: 'General', created_at: '' }); setShowAdd(true); }}>
+                        <Plus size={18} /> Add New Expense
+                    </button>
+                </div>
             </header>
 
             {showAdd && (
-                <Card title="Add New Expense">
+                <Card title={editingExpense ? "Edit Expense" : "Add New Expense"}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '16px' }}>Add your daily spending here so we can track your money better.</p>
                     <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px' }}>Description</label>
@@ -75,7 +130,7 @@ export const Expenses = ({ user }) => {
                             />
                         </div>
                         <div>
-                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px' }}>Category</label>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px' }}>Expense Type</label>
                             <select
                                 value={newExpense.category}
                                 onChange={e => setNewExpense({ ...newExpense, category: e.target.value })}
@@ -84,9 +139,30 @@ export const Expenses = ({ user }) => {
                                 {['General', 'Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping'].map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '8px' }}>Date (Optional)</label>
+                            <input
+                                type="date"
+                                value={newExpense.created_at}
+                                onChange={e => setNewExpense({ ...newExpense, created_at: e.target.value })}
+                                style={{ width: '100%', background: 'var(--background)', border: '1px solid var(--glass-border)', padding: '10px', borderRadius: '8px', color: 'white' }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <button type="submit" className="btn-primary" style={{ flex: 1 }}>Save</button>
                             <button type="button" className="btn-ghost" onClick={() => setShowAdd(false)}>Cancel</button>
+                        </div>
+                        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'rgba(99,102,241,0.05)', borderRadius: '8px', border: '1px solid rgba(99,102,241,0.15)' }}>
+                            <input
+                                type="checkbox"
+                                id="is_recurring"
+                                checked={newExpense.is_recurring}
+                                onChange={e => setNewExpense({ ...newExpense, is_recurring: e.target.checked })}
+                                style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                            />
+                            <label htmlFor="is_recurring" style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)', cursor: 'pointer', userSelect: 'none' }}>
+                                🔁 <strong>Recurring monthly expense</strong> <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(e.g. rent, subscriptions, EMIs)</span>
+                            </label>
                         </div>
                     </form>
                 </Card>
@@ -98,9 +174,11 @@ export const Expenses = ({ user }) => {
                         <thead>
                             <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--glass-border)' }}>
                                 <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500 }}>Description</th>
-                                <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500 }}>Category</th>
+                                <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500 }}>Expense Type</th>
                                 <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500 }}>Date</th>
                                 <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500, textAlign: 'right' }}>Amount</th>
+                                <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500, textAlign: 'center' }}>Recurring</th>
+                                <th style={{ padding: '12px', color: 'var(--muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,6 +206,25 @@ export const Expenses = ({ user }) => {
                                     </td>
                                     <td style={{ padding: '16px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--primary)' }}>
                                         ${exp.amount.toFixed(2)}
+                                    </td>
+                                    <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                                        {exp.is_recurring && (
+                                            <span style={{
+                                                padding: '3px 10px',
+                                                background: 'rgba(99, 102, 241, 0.15)',
+                                                borderRadius: '12px',
+                                                fontSize: '0.75rem',
+                                                color: 'var(--primary)',
+                                                fontWeight: 600,
+                                                border: '1px solid rgba(99,102,241,0.3)'
+                                            }}>🔁 Recurring</span>
+                                        )}
+                                    </td>
+                                    <td style={{ padding: '16px 12px', textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                            <button onClick={() => handleEdit(exp)} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer' }} title="Edit">Edit</button>
+                                            <button onClick={() => handleDelete(exp.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }} title="Delete">Delete</button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

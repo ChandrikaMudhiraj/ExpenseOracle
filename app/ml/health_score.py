@@ -4,7 +4,7 @@ import numpy as np
 class FinancialHealthScore:
     """
     Engine to calculate a proprietary Financial Health Score (0-100).
-    Aggregates metrics like savings rate, budget adherence, and volatility.
+    Aggregates metrics like savings rate, budget adherence, and spending stability.
     """
 
     @classmethod
@@ -12,13 +12,24 @@ class FinancialHealthScore:
         """
         Calculates the health score and identifies key contributors.
         """
-        if not expenses or income <= 0:
+        # Ensure we have some base income from profile if passed 0
+        if income <= 0:
             return {
                 "score": 50,
-                "status": "Insufficient Data",
+                "status": "Set Your Income",
+                "message": "Please update your monthly income in Profile to calculate your score.",
                 "factors": {},
-                "metrics": {"savings_rate_pct": 0.0, "budget_utilization_pct": 0.0, "volatility_index": 0.0},
-                "recommendations": ["Set your monthly income and add some expenses to get personalized advice."]
+                "metrics": {"savings_rate_pct": 0.0, "budget_usage_pct": 0.0, "stability_score": 0.0},
+                "recommendations": ["Go to your Profile and set your monthly income to activate full AI features."]
+            }
+
+        if not expenses:
+            return {
+                "score": 50,
+                "status": "No Expenses",
+                "factors": {},
+                "metrics": {"savings_rate_pct": 100.0, "budget_usage_pct": 0.0, "stability_score": 0.0},
+                "recommendations": ["Add your first expense to see your financial health analysis."]
             }
 
         total_spent = sum(e['amount'] for e in expenses)
@@ -53,8 +64,8 @@ class FinancialHealthScore:
             "status": status,
             "metrics": {
                 "savings_rate_pct": round(savings_rate, 1),
-                "budget_utilization_pct": round(budget_utilization, 1),
-                "volatility_index": round(float(np.std(amounts) if len(amounts) > 1 else 0), 2)
+                "budget_usage_pct": round(budget_utilization, 1),
+                "stability_score": round(float(np.std(amounts) if len(amounts) > 1 else 0), 2)
             },
             "recommendations": cls._get_recommendations(final_score, savings_rate, budget_utilization)
         }

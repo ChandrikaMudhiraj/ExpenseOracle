@@ -29,15 +29,15 @@ class AutonomousEngine:
         if surplus > 0:
             investment_advice = InvestmentOptimizer.suggest_allocation(surplus)
             actions.append({
-                "type": "INVESTMENT_ADVICE",
+                "type": "SAVINGS_OPPORTUNITY",
                 "priority_score": 0.85 if health['score'] > 70 else 0.60,
                 "confidence_threshold": forecast_result['confidence_level'],
                 "message": f"Forecast shows a surplus of ${round(surplus, 2)} this month with an {forecast_result['trend']} trend.",
                 "action": investment_advice["action"],
                 "why": [
                     f"Forecast predicts total spending will be {round((forecasted_spend/monthly_budget)*100, 1)}% of budget.",
-                    f"Spending momentum is currently {forecast_result['trend']}.",
-                    f"Financial health score of {health['score']} allows for allocation."
+                    f"Spending habits are currently {forecast_result['trend']}.",
+                    f"Your health score of {health['score']} shows you're ready to save more."
                 ]
             })
         else:
@@ -49,8 +49,8 @@ class AutonomousEngine:
                 "message": f"Alert: You are on track to exceed your budget by ${round(abs(surplus), 2)}.",
                 "action": "Freeze non-essential 'Shopping' categories immediately.",
                 "why": [
-                    f"Current spending velocity is {round(abs(surplus), 2)} above threshold.",
-                    f"Forecast indicates budget breach in approx {max(1, 30 - len(expenses))} days."
+                    f"Current spending speed is {round(abs(surplus), 2)} above your usual level.",
+                    f"Estimates show you might run out of budget in about {max(1, 30 - len(expenses))} days."
                 ]
             })
             

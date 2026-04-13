@@ -5,6 +5,9 @@ from datetime import datetime
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    monthly_income: float = 0.0
+    risk_tolerance: str = "Moderate"
+    savings_target_percent: float = 20.0
 
 
 class UserLogin(BaseModel):
@@ -18,8 +21,15 @@ class UserResponse(BaseModel):
     monthly_income: float
     monthly_savings: float
     risk_tolerance: str
+    savings_target_percent: float = 20.0
     created_at: datetime
 
-    model_config = {
-        "from_attributes": True
-    }
+    class Config:
+        from_attributes = True
+
+
+class ProfileUpdate(BaseModel):
+    monthly_income: float
+    monthly_savings: float
+    risk_tolerance: str
+    savings_target_percent: float = 20.0
