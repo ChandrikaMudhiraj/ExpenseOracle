@@ -3,6 +3,12 @@
 > **ExpenseOracle** is a full-stack, AI-driven personal finance platform that transforms passive expense tracking into an active, self-optimizing financial intelligence ecosystem. Built for the Innovation Marathon.
 
 ---
+## 🔗 Live Links
+
+* Live URL: expenseoracle.onrender.com
+* Demo Video URL: https://youtu.be/McEFzFlJNyQ
+
+---
 
 ## 🌟 What It Does
 
